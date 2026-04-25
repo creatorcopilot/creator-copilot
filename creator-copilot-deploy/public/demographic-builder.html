@@ -1098,7 +1098,7 @@ Return ONLY the JSON object. No extra text.`;
 
   // ── CALL CLAUDE API ─────────────────────────────────────────
   // ⚡ REPLACE THIS URL with your Vercel/Netlify function URL when deploying
-  const API_ENDPOINT = '/api/generate';
+  const API_ENDPOINT = '/.netlify/functions/generate';
 
   async function callClaudeAPI(prompt) {
     const response = await fetch(API_ENDPOINT, {
