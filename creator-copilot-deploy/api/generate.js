@@ -1,5 +1,6 @@
 const Anthropic = require('@anthropic-ai/sdk');
 const { createClient } = require('@supabase/supabase-js');
+const { MASTER_REFERENCE } = require('./master-reference');
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 const supabase = createClient(
@@ -23,11 +24,7 @@ export default async function handler(req, res) {
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 2000,
-      system: `You are the Creator Copilot demographic intelligence system. 
-You build precise psychological audience profiles from craft-based answers.
-You have deep expertise in content strategy, audience psychology, and brand intelligence.
-Always respond with valid JSON only — no preamble, no markdown, no explanation.
-Your audience profiles are specific, psychologically precise, and built from real intelligence about how audiences think and behave.`,
+      system: MASTER_REFERENCE + `\n\nYou are currently running the DEMOGRAPHIC BUILDER system. Generate the six-section demographic report from the client's five craft-based answers. Return ONLY valid JSON with keys: who, psychology, language, where, brands, hook. Be specific, psychological, and research-driven. Never be vague.`,
       messages: [{ role: 'user', content: prompt }]
     });
 

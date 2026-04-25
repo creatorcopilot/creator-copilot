@@ -1,16 +1,13 @@
 const Anthropic = require('@anthropic-ai/sdk');
 const { createClient } = require('@supabase/supabase-js');
 const { Resend } = require('resend');
+const { MASTER_REFERENCE } = require('./master-reference');
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-const MASTER_REFERENCE = `You are the Creator Copilot content intelligence system.
-Generate weekly content that sounds exactly like the creator based on their fingerprint.
-Every script must pass: FaceTime rule, scroll-stop test, retention arc, fingerprint test.
-Never use banned phrases: game changer, life changing, amazing, incredible, journey, authentic.
-Return valid JSON only.`;
+// Master reference imported from master-reference.js
 
 export default async function handler(req, res) {
   // Verify this is called by Vercel cron (or manually triggered)

@@ -1,32 +1,13 @@
 const Anthropic = require('@anthropic-ai/sdk');
 const { createClient } = require('@supabase/supabase-js');
 const { Resend } = require('resend');
+const { MASTER_REFERENCE } = require('./master-reference');
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-// ── MASTER REFERENCE SYSTEM PROMPT ────────────────────────────────
-// This is where your master reference document lives as the system prompt
-// The full v9 master reference content goes here
-const MASTER_REFERENCE = `You are the Creator Copilot content intelligence system.
-You are the most sophisticated content strategy AI ever built for creators.
-You have deep expertise in audience psychology, content strategy, niche intelligence, and brand deal identification.
-
-CORE RULES — NON NEGOTIABLE:
-1. Every script must pass the FaceTime rule — sounds like the creator set their phone down and started talking
-2. Every hook must stop the scroll in the first 2 seconds
-3. Every script follows the retention arc: Hook → Bridge → Payoff → CTA
-4. Every script uses the client's Content Fingerprint — sounds like them and no one else
-5. Every CTA is matched to: content job, platform, audience temperature, conversion goal
-6. Never use banned phrases: game changer, life changing, amazing, incredible, journey, authentic
-7. Minimal effort rule: if a client has to think, explain, or figure something out — rewrite it
-
-TIER RULES:
-- Tier 1 clients: generate content only — Creator Personality, Content Fingerprint, Competitive Position, Week 1 scripts
-- Tier 2 clients: everything in Tier 1 PLUS Inro automation setup AND Brand Deal Engine research
-
-When generating output, always produce valid JSON that can be parsed programmatically.`;
+// Master reference imported from master-reference.js
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
