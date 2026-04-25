@@ -1,0 +1,138 @@
+# CREATOR COPILOT — Setup Instructions
+# Read this top to bottom. Follow in order. Takes about 20 minutes.
+
+═══════════════════════════════════════
+STEP 1 — UPLOAD TO GITHUB
+═══════════════════════════════════════
+
+1. Go to github.com and log in
+2. Click the + icon → New repository
+3. Name it: creator-copilot
+4. Set to Private
+5. Check "Add a README file"
+6. Click "Create repository"
+7. Click "Upload files"
+8. Drag the entire creator-copilot-deploy folder into the upload area
+9. Click "Commit changes"
+
+═══════════════════════════════════════
+STEP 2 — DEPLOY ON VERCEL
+═══════════════════════════════════════
+
+1. Go to vercel.com and log in
+2. Click "Add New Project"
+3. Select your creator-copilot repository
+4. Click "Deploy" — leave all settings as default
+5. Wait about 60 seconds for it to deploy
+6. You'll get a URL like: creator-copilot-xxx.vercel.app
+   (We'll add your real domain after)
+
+═══════════════════════════════════════
+STEP 3 — ADD YOUR API KEYS TO VERCEL
+═══════════════════════════════════════
+
+1. In Vercel, go to your project
+2. Click "Settings" → "Environment Variables"
+3. Add each key below — copy the name EXACTLY:
+
+   Name: ANTHROPIC_API_KEY
+   Value: [your Anthropic API key from Notes]
+
+   Name: SUPABASE_URL
+   Value: https://twkmpnezpuchelblxjfs.supabase.co
+
+   Name: SUPABASE_ANON_KEY
+   Value: [your Supabase anon key from Notes]
+
+   Name: SUPABASE_SERVICE_KEY
+   Value: [your Supabase service role key from Notes]
+
+   Name: STRIPE_SECRET_KEY
+   Value: [your Stripe secret key from Notes]
+
+   Name: RESEND_API_KEY
+   Value: [your Resend API key from Notes]
+
+   Name: FROM_EMAIL
+   Value: marketing@creatorcopilot.org
+
+   Name: NOTIFY_EMAIL
+   Value: marketing@creatorcopilot.org
+
+   Name: CRON_SECRET
+   Value: [make up any random password — save it]
+
+4. Click "Save" after adding all keys
+5. Go to "Deployments" and click "Redeploy" to apply the keys
+
+═══════════════════════════════════════
+STEP 4 — SET UP THE DATABASE
+═══════════════════════════════════════
+
+1. Go to supabase.com → your creator-copilot project
+2. Click "SQL Editor" in the left sidebar
+3. Click "New query"
+4. Open the file: database/setup.sql
+5. Copy the entire contents
+6. Paste it into the SQL editor
+7. Click "Run"
+8. You should see: "Database setup complete!"
+
+═══════════════════════════════════════
+STEP 5 — SET UP STRIPE WEBHOOK
+═══════════════════════════════════════
+
+1. Go to dashboard.stripe.com
+2. Click "Developers" → "Webhooks"
+3. Click "Add endpoint"
+4. Endpoint URL: https://your-vercel-url.vercel.app/api/stripe-webhook
+   (Replace with your actual Vercel URL from Step 2)
+5. Select events: checkout.session.completed, customer.subscription.deleted
+6. Click "Add endpoint"
+7. Click on the webhook you just created
+8. Click "Reveal" next to "Signing secret"
+9. Copy that secret and add it to Vercel environment variables:
+   Name: STRIPE_WEBHOOK_SECRET
+   Value: [the signing secret you just copied]
+10. Redeploy on Vercel
+
+═══════════════════════════════════════
+STEP 6 — VERIFY RESEND DOMAIN
+═══════════════════════════════════════
+
+1. Go to resend.com
+2. Click "Domains" in the sidebar
+3. Click "Add Domain"
+4. Type: creatorcopilot.org
+5. They'll give you DNS records to add
+6. Go to wherever you bought the domain (GoDaddy, Namecheap, etc.)
+7. Add those DNS records
+8. Come back to Resend and click "Verify"
+
+═══════════════════════════════════════
+STEP 7 — ADD YOUR DOMAIN TO VERCEL
+═══════════════════════════════════════
+
+1. In Vercel → your project → Settings → Domains
+2. Type: creatorcopilot.org
+3. Click "Add"
+4. Follow the DNS instructions they give you
+5. Add those DNS records to your domain registrar
+6. Wait 10-15 minutes for it to propagate
+
+═══════════════════════════════════════
+STEP 8 — TEST EVERYTHING
+═══════════════════════════════════════
+
+1. Go to creatorcopilot.org
+2. Test the demographic builder — answer the 5 questions
+3. Make sure the report appears on screen
+4. Test the intake form — fill it out completely
+5. Check marketing@creatorcopilot.org for the Week 1 email
+6. Check Supabase → Table Editor → clients to see the record
+
+If anything doesn't work — contact us and we'll fix it.
+
+═══════════════════════════════════════
+YOU'RE LIVE. GO GET CLIENTS.
+═══════════════════════════════════════
