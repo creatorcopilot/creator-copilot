@@ -1,0 +1,18 @@
+{
+  "version": 2,
+  "builds": [
+    { "src": "api/*.js", "use": "@vercel/node" }
+  ],
+  "routes": [
+    { "src": "/api/(.*)", "dest": "/api/$1" },
+    { "src": "/demographic-builder", "dest": "/public/demographic-builder.html" },
+    { "src": "/intake", "dest": "/public/intake-form.html" },
+    { "src": "/", "dest": "/public/index.html" }
+  ],
+  "crons": [
+    {
+      "path": "/api/weekly-delivery",
+      "schedule": "0 8 * * 1"
+    }
+  ]
+}
