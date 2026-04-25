@@ -1,0 +1,1220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Creator Copilot — Audience Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --black: #06060F;
+    --white: #F4F4EF;
+    --red: #FF2424;
+    --red-dark: #CC1A1A;
+    --gray: #0E0E1C;
+    --gray-mid: #1A1A2E;
+    --gray-light: #6666AA;
+    --border: rgba(255,255,255,0.07);
+    --green: #00FF88;
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--black);
+    color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* ── NOISE ── */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 999;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(6,6,15,0.92);
+    backdrop-filter: blur(24px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    letter-spacing: 2px;
+    color: var(--white);
+    text-decoration: none;
+  }
+
+  .logo span { color: var(--red); }
+
+  .nav-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--gray-light);
+    text-transform: uppercase;
+  }
+
+  /* ── SCREENS ── */
+  .screen {
+    display: none;
+    min-height: 100vh;
+    padding: 100px 24px 60px;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .screen.active { display: flex; flex-direction: column; }
+
+  /* ── INTRO SCREEN ── */
+  #screen-intro {
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .intro-glow {
+    position: fixed;
+    top: -200px; left: 50%;
+    transform: translateX(-50%);
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(255,36,36,0.1) 0%, transparent 65%);
+    pointer-events: none;
+  }
+
+  .intro-tag {
+    display: inline-block;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--red);
+    border: 1px solid rgba(255,36,36,0.3);
+    padding: 6px 14px;
+    margin-bottom: 28px;
+    text-transform: uppercase;
+    animation: fadeUp 0.6s both 0.1s;
+  }
+
+  .intro-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(52px, 13vw, 96px);
+    line-height: 0.92;
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+    animation: fadeUp 0.6s both 0.2s;
+  }
+
+  .intro-title em { color: var(--red); font-style: normal; }
+
+  .intro-sub {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(18px, 4vw, 28px);
+    letter-spacing: 4px;
+    color: var(--gray-light);
+    margin-bottom: 28px;
+    animation: fadeUp 0.6s both 0.3s;
+  }
+
+  .intro-body {
+    font-size: 15px;
+    font-weight: 300;
+    color: var(--gray-light);
+    max-width: 400px;
+    line-height: 1.8;
+    margin-bottom: 36px;
+    animation: fadeUp 0.6s both 0.4s;
+  }
+
+  .intro-body strong { color: var(--white); font-weight: 600; }
+
+  .intro-disclaimer {
+    font-size: 13px;
+    font-weight: 300;
+    color: var(--gray-light);
+    max-width: 420px;
+    margin: 0 auto 36px;
+    padding: 16px 20px;
+    border-left: 3px solid var(--red);
+    background: rgba(255,36,36,0.04);
+    text-align: left;
+    line-height: 1.7;
+    animation: fadeUp 0.6s both 0.5s;
+  }
+
+  .intro-disclaimer strong { color: var(--white); }
+
+  .btn-start {
+    background: var(--red);
+    color: var(--white);
+    font-weight: 700;
+    font-size: 15px;
+    padding: 18px 48px;
+    border: none;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s;
+    animation: fadeUp 0.6s both 0.6s;
+    letter-spacing: 0.3px;
+  }
+
+  .btn-start:hover {
+    background: var(--red-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 32px rgba(255,36,36,0.25);
+  }
+
+  .intro-note {
+    margin-top: 16px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: rgba(100,100,150,0.5);
+    text-transform: uppercase;
+    animation: fadeUp 0.6s both 0.7s;
+  }
+
+  /* ── QUESTION SCREEN ── */
+  #screen-questions {
+    justify-content: center;
+    padding-top: 90px;
+  }
+
+  .q-progress {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 48px;
+  }
+
+  .q-dot {
+    height: 3px;
+    flex: 1;
+    background: var(--gray-mid);
+    transition: background 0.4s;
+    border-radius: 2px;
+  }
+
+  .q-dot.done { background: var(--red); }
+  .q-dot.active { background: rgba(255,36,36,0.5); }
+
+  .q-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .q-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--red);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .q-text {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(28px, 6vw, 44px);
+    line-height: 1.05;
+    letter-spacing: 1px;
+    color: var(--white);
+    margin-bottom: 12px;
+  }
+
+  .q-hint {
+    font-size: 13px;
+    font-weight: 300;
+    color: var(--gray-light);
+    margin-bottom: 32px;
+    line-height: 1.7;
+    font-style: italic;
+  }
+
+  .q-hint strong { color: rgba(255,255,255,0.6); font-style: normal; font-weight: 500; }
+
+  .q-textarea {
+    width: 100%;
+    background: var(--gray-mid);
+    border: 1px solid var(--border);
+    color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 300;
+    padding: 18px 20px;
+    resize: none;
+    outline: none;
+    line-height: 1.7;
+    min-height: 120px;
+    transition: border-color 0.2s;
+    -webkit-appearance: none;
+    border-radius: 0;
+  }
+
+  .q-textarea:focus { border-color: rgba(255,36,36,0.4); }
+  .q-textarea::placeholder { color: rgba(100,100,150,0.5); }
+
+  .q-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 24px;
+    gap: 12px;
+  }
+
+  .btn-back {
+    background: transparent;
+    color: var(--gray-light);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 14px 20px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-back:hover { color: var(--white); border-color: rgba(255,255,255,0.2); }
+
+  .btn-next {
+    background: var(--red);
+    color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    padding: 16px 32px;
+    border: none;
+    cursor: pointer;
+    flex: 1;
+    transition: all 0.2s;
+    max-width: 240px;
+  }
+
+  .btn-next:hover { background: var(--red-dark); }
+  .btn-next:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .q-counter {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--gray-light);
+    letter-spacing: 1px;
+  }
+
+  /* ── LOADING SCREEN ── */
+  #screen-loading {
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .load-orb {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 40px;
+  }
+
+  .load-ring {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 2px solid transparent;
+  }
+
+  .load-ring-1 {
+    border-top-color: var(--red);
+    animation: spin 1.2s linear infinite;
+  }
+
+  .load-ring-2 {
+    inset: 12px;
+    border-right-color: rgba(255,36,36,0.4);
+    animation: spin 1.8s linear infinite reverse;
+  }
+
+  .load-ring-3 {
+    inset: 24px;
+    border-bottom-color: rgba(255,36,36,0.2);
+    animation: spin 2.4s linear infinite;
+  }
+
+  .load-center {
+    position: absolute;
+    inset: 36px;
+    border-radius: 50%;
+    background: rgba(255,36,36,0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    color: var(--red);
+    letter-spacing: 1px;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  .load-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 32px;
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+    color: var(--white);
+  }
+
+  .load-status {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 2px;
+    color: var(--red);
+    text-transform: uppercase;
+    margin-bottom: 40px;
+    min-height: 20px;
+  }
+
+  .load-steps {
+    list-style: none;
+    text-align: left;
+    max-width: 340px;
+    margin: 0 auto;
+  }
+
+  .load-step {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    font-weight: 300;
+    color: rgba(100,100,150,0.5);
+    transition: color 0.5s;
+  }
+
+  .load-step:last-child { border-bottom: none; }
+
+  .load-step.done { color: var(--white); }
+  .load-step.active { color: var(--white); }
+
+  .step-icon {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    flex-shrink: 0;
+    transition: all 0.5s;
+  }
+
+  .load-step.done .step-icon {
+    background: var(--red);
+    border-color: var(--red);
+    color: var(--white);
+  }
+
+  .load-step.active .step-icon {
+    border-color: var(--red);
+    color: var(--red);
+    animation: pulse 1s ease-in-out infinite;
+  }
+
+  /* ── REPORT SCREEN ── */
+  #screen-report {
+    padding-top: 90px;
+    padding-bottom: 80px;
+  }
+
+  .report-header {
+    text-align: center;
+    margin-bottom: 48px;
+    animation: fadeUp 0.7s both;
+  }
+
+  .report-badge {
+    display: inline-block;
+    background: rgba(0,255,136,0.1);
+    border: 1px solid rgba(0,255,136,0.3);
+    color: var(--green);
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    padding: 6px 14px;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+
+  .report-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(36px, 8vw, 56px);
+    line-height: 0.95;
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+  }
+
+  .report-title em { color: var(--red); font-style: normal; }
+
+  .report-sub {
+    font-size: 14px;
+    font-weight: 300;
+    color: var(--gray-light);
+  }
+
+  .report-body {
+    animation: fadeUp 0.7s both 0.2s;
+  }
+
+  .report-section {
+    margin-bottom: 32px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+
+  .rs-header {
+    background: var(--gray-mid);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .rs-icon {
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .rs-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--red);
+    text-transform: uppercase;
+  }
+
+  .rs-content {
+    padding: 20px;
+    font-size: 14px;
+    font-weight: 300;
+    color: rgba(244,244,239,0.85);
+    line-height: 1.8;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .rs-content strong {
+    color: var(--white);
+    font-weight: 600;
+  }
+
+  /* Typewriter cursor */
+  .cursor {
+    display: inline-block;
+    width: 2px;
+    height: 14px;
+    background: var(--red);
+    margin-left: 2px;
+    vertical-align: middle;
+    animation: blink 1s step-end infinite;
+  }
+
+  /* ── UPGRADE SECTION ── */
+  .upgrade-wrap {
+    margin-top: 48px;
+    text-align: center;
+    animation: fadeUp 0.7s both 0.4s;
+  }
+
+  .upgrade-line {
+    width: 40px;
+    height: 3px;
+    background: var(--red);
+    margin: 0 auto 28px;
+  }
+
+  .upgrade-eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--red);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    display: block;
+  }
+
+  .upgrade-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(32px, 7vw, 52px);
+    line-height: 1;
+    letter-spacing: 1px;
+    margin-bottom: 16px;
+  }
+
+  .upgrade-body {
+    font-size: 15px;
+    font-weight: 300;
+    color: var(--gray-light);
+    max-width: 420px;
+    margin: 0 auto 32px;
+    line-height: 1.8;
+  }
+
+  .upgrade-body strong { color: var(--white); font-weight: 600; }
+
+  .upgrade-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .upgrade-card {
+    border: 1px solid var(--border);
+    padding: 24px 20px;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 0.2s;
+    text-decoration: none;
+    display: block;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .upgrade-card:hover { border-color: rgba(255,36,36,0.4); }
+
+  .upgrade-card.featured {
+    border-color: var(--red);
+    background: linear-gradient(160deg, rgba(255,36,36,0.05) 0%, transparent 60%);
+  }
+
+  .uc-tag {
+    position: absolute;
+    top: -1px; right: 16px;
+    background: var(--red);
+    color: var(--white);
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    padding: 4px 10px;
+    text-transform: uppercase;
+  }
+
+  .uc-tier {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--red);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .uc-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 2px;
+    margin-bottom: 2px;
+    color: var(--white);
+  }
+
+  .uc-price {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 36px;
+    color: var(--white);
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+
+  .uc-price span {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 300;
+    color: var(--gray-light);
+  }
+
+  .uc-desc {
+    font-size: 12px;
+    font-weight: 300;
+    color: var(--gray-light);
+    line-height: 1.6;
+  }
+
+  .upgrade-skip {
+    font-size: 12px;
+    font-weight: 300;
+    color: var(--gray-light);
+    cursor: pointer;
+    background: none;
+    border: none;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .upgrade-skip:hover { color: var(--white); }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(20px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  .slide-in { animation: slideIn 0.4s both; }
+
+
+  /* ── EMAIL SCREEN ────────────────────────────────────────────── */
+  .email-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 360px;
+    animation: fadeUp 0.5s both 0.2s;
+  }
+
+  .email-input {
+    width: 100%;
+    background: var(--gray-mid);
+    border: 1px solid var(--border);
+    color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    font-weight: 300;
+    padding: 18px 20px;
+    outline: none;
+    transition: border-color 0.2s;
+    border-radius: 0;
+    -webkit-appearance: none;
+    margin-bottom: 12px;
+  }
+
+  .email-input:focus { border-color: rgba(255,36,36,0.5); }
+  .email-input::placeholder { color: rgba(100,100,150,0.4); }
+
+  .email-note {
+    font-size: 11px;
+    font-weight: 300;
+    color: rgba(100,100,150,0.5);
+    text-align: center;
+    margin-top: 8px;
+    line-height: 1.6;
+  }
+
+  .email-note span { color: rgba(255,36,36,0.5); }
+
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="logo">CREATOR<span>COPILOT</span></a>
+  <span class="nav-tag">Audience Builder</span>
+</nav>
+
+<!-- ── SCREEN 1: INTRO ── -->
+<div class="screen active" id="screen-intro">
+  <div class="intro-glow"></div>
+  <span class="intro-tag">$50 · One Time · Instant Results</span>
+  <h1 class="intro-title">FIND YOUR<br><em>EXACT</em><br>AUDIENCE.</h1>
+  <p class="intro-sub">IN UNDER 5 MINUTES.</p>
+  <p class="intro-body">
+    Answer <strong>five simple questions</strong> about what you do. We build you a complete audience profile — who they are, what drives them, where they live online, and which brands want to reach them right now.
+  </p>
+  <p class="intro-disclaimer">
+    <strong>The more specific you are, the more precise your results.</strong> You don't need to know your audience — that's the whole point. Just tell us about your craft. We figure out the rest.
+  </p>
+  <button class="btn-start" onclick="startQuestions()">Build My Audience Profile →</button>
+  <p class="intro-note">5 questions · 2 min to complete · results in real time</p>
+</div>
+
+
+<!-- ── SCREEN 1.5: EMAIL ── -->
+<div class="screen" id="screen-email">
+  <div class="intro-glow"></div>
+  <span class="intro-tag">One quick thing first</span>
+  <h1 class="intro-title" style="font-size:clamp(40px,10vw,72px);margin-bottom:16px;">SAVE YOUR<br><em>PROFILE.</em></h1>
+  <p class="intro-body" style="margin-bottom:28px;">
+    Drop your email so we can save your audience profile. If you ever upgrade to the full service, <strong>we'll already have your data and skip the audience questions entirely.</strong>
+  </p>
+  <div class="email-wrap">
+    <input
+      type="email"
+      class="email-input"
+      id="email-input"
+      placeholder="your@email.com"
+      autocomplete="email"
+    />
+    <button class="btn-start" onclick="submitEmail()" style="width:100%;">Continue →</button>
+    <p class="email-note">We save your profile to this email. <span>No spam. Ever.</span></p>
+  </div>
+</div>
+
+<!-- ── SCREEN 2: QUESTIONS ── -->
+<div class="screen" id="screen-questions">
+
+  <div class="q-progress">
+    <div class="q-dot active" id="dot-0"></div>
+    <div class="q-dot" id="dot-1"></div>
+    <div class="q-dot" id="dot-2"></div>
+    <div class="q-dot" id="dot-3"></div>
+    <div class="q-dot" id="dot-4"></div>
+  </div>
+
+  <div class="q-wrap">
+    <div class="q-num" id="q-num">Question 1 of 5</div>
+    <div class="q-text" id="q-text"></div>
+    <div class="q-hint" id="q-hint"></div>
+    <textarea class="q-textarea" id="q-input" placeholder="" rows="4"></textarea>
+    <div class="q-nav">
+      <button class="btn-back" id="btn-back" onclick="prevQuestion()" style="display:none">← Back</button>
+      <span class="q-counter" id="q-counter"></span>
+      <button class="btn-next" id="btn-next" onclick="nextQuestion()">Continue →</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── SCREEN 3: LOADING ── -->
+<div class="screen" id="screen-loading">
+  <div class="load-orb">
+    <div class="load-ring load-ring-1"></div>
+    <div class="load-ring load-ring-2"></div>
+    <div class="load-ring load-ring-3"></div>
+    <div class="load-center">CC</div>
+  </div>
+  <div class="load-title">BUILDING YOUR PROFILE</div>
+  <div class="load-status" id="load-status">Initializing...</div>
+  <ul class="load-steps">
+    <li class="load-step" id="lstep-0">
+      <div class="step-icon">1</div>
+      <span>Identifying your niche and content world</span>
+    </li>
+    <li class="load-step" id="lstep-1">
+      <div class="step-icon">2</div>
+      <span>Researching your niche across TikTok and Instagram</span>
+    </li>
+    <li class="load-step" id="lstep-2">
+      <div class="step-icon">3</div>
+      <span>Mapping audience psychology and hidden drivers</span>
+    </li>
+    <li class="load-step" id="lstep-3">
+      <div class="step-icon">4</div>
+      <span>Identifying brands actively spending in your space</span>
+    </li>
+    <li class="load-step" id="lstep-4">
+      <div class="step-icon">5</div>
+      <span>Building your complete audience profile</span>
+    </li>
+  </ul>
+</div>
+
+<!-- ── SCREEN 4: REPORT ── -->
+<div class="screen" id="screen-report">
+  <div class="report-header">
+    <div class="report-badge">✓ Profile Complete</div>
+    <h2 class="report-title">YOUR <em>AUDIENCE</em><br>PROFILE IS READY.</h2>
+    <p class="report-sub">Built from live research — specific to you.</p>
+  </div>
+
+  <div class="report-body" id="report-body">
+    <!-- Sections injected by JS -->
+  </div>
+
+  <div class="upgrade-wrap">
+    <div class="upgrade-line"></div>
+    <span class="upgrade-eyebrow">Now that we know your audience</span>
+    <h3 class="upgrade-title">LET US BUILD THE CONTENT THAT REACHES THEM.</h3>
+    <p class="upgrade-body">
+      Every script <strong>engineered for your specific audience.</strong> Designed to stop their scroll, keep them watching, and drive them to act. Delivered every Monday. Done for you.
+    </p>
+    <div class="upgrade-cards">
+      <a href="#" class="upgrade-card featured">
+        <div class="uc-tag">Most Popular</div>
+        <div class="uc-tier">Tier 2 — All Inclusive</div>
+        <div class="uc-name">Content + Brand Deals</div>
+        <div class="uc-price">$497<span>/month</span></div>
+        <div class="uc-desc">5 weekly scripts + brand deal pitches + lead capture automation running 24/7</div>
+      </a>
+      <a href="#" class="upgrade-card">
+        <div class="uc-tier">Tier 1 — Content</div>
+        <div class="uc-name">Scripts Only</div>
+        <div class="uc-price">$297<span>/month</span></div>
+        <div class="uc-desc">5 weekly scripts written in your voice, for your exact audience. Delivered every Monday.</div>
+      </a>
+    </div>
+    <button class="upgrade-skip" onclick="window.location='/'">No thanks, I'll figure it out myself</button>
+  </div>
+</div>
+
+<script>
+  // ── QUESTIONS DATA ──────────────────────────────────────────
+  const QUESTIONS = [
+    {
+      text: "What do you do — and what made you start doing it?",
+      hint: "e.g. <strong>\"I'm a singer-songwriter. I started writing music after a breakup because I couldn't find songs that said what I was feeling.\"</strong> — Tell us your story.",
+      placeholder: "I make / I do / I create..."
+    },
+    {
+      text: "Describe what you make or do like you're explaining it to someone who has never heard of it.",
+      hint: "e.g. <strong>\"I make slow, moody songs about feeling lost in your twenties — like if you were driving alone at night and needed something that understood you.\"</strong>",
+      placeholder: "In simple terms, what I do is..."
+    },
+    {
+      text: "When someone experiences what you do — what do you want them to feel in that moment?",
+      hint: "e.g. <strong>\"Like someone finally gets what they've been feeling but couldn't say out loud.\"</strong> or <strong>\"Like they can breathe again.\"</strong>",
+      placeholder: "I want them to feel..."
+    },
+    {
+      text: "Think about the person who needs what you do the most right now. What's going on in their life?",
+      hint: "e.g. <strong>\"She's 38, works full time, tried three gyms this year. Goes for two weeks then stops. Nothing works and she's starting to think her body just doesn't respond anymore.\"</strong>",
+      placeholder: "They're probably..."
+    },
+    {
+      text: "Is there anyone — a creator, artist, brand, or public figure — whose audience feels like your kind of people?",
+      hint: "e.g. <strong>\"Phoebe Bridgers — her fans feel deeply, they're 20s-30s, they share music that 'gets them'.\"</strong> Doesn't have to be in your exact space.",
+      placeholder: "Someone like... / Their fans remind me of..."
+    }
+  ];
+
+  // ── STATE ───────────────────────────────────────────────────
+  let currentQ = 0;
+  const answers = ['', '', '', '', ''];
+
+  // ── SCREEN SWITCH ───────────────────────────────────────────
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('screen-' + id).classList.add('active');
+    window.scrollTo(0, 0);
+  }
+
+  // ── INTRO → QUESTIONS ───────────────────────────────────────
+  let clientEmail = '';
+
+  function startQuestions() {
+    showScreen('email');
+  }
+
+  function submitEmail() {
+    const input = document.getElementById('email-input');
+    const val = input.value.trim();
+
+    if (!val || !val.includes('@')) {
+      input.style.borderColor = 'rgba(255,36,36,0.6)';
+      input.placeholder = 'Please enter a valid email';
+      setTimeout(() => {
+        input.style.borderColor = '';
+        input.placeholder = 'your@email.com';
+      }, 2000);
+      return;
+    }
+
+    clientEmail = val;
+
+    // Save email to localStorage so intake form can check it
+    localStorage.setItem('cc_email', val);
+    localStorage.setItem('cc_demo_complete', 'pending');
+
+    showScreen('questions');
+    renderQuestion(0);
+  }
+
+  // Allow enter key on email field
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && document.getElementById('screen-email').classList.contains('active')) {
+      submitEmail();
+    }
+  });
+
+  // ── RENDER QUESTION ─────────────────────────────────────────
+  function renderQuestion(index) {
+    const q = QUESTIONS[index];
+    const numEl = document.getElementById('q-num');
+    const textEl = document.getElementById('q-text');
+    const hintEl = document.getElementById('q-hint');
+    const inputEl = document.getElementById('q-input');
+    const backBtn = document.getElementById('btn-back');
+    const nextBtn = document.getElementById('btn-next');
+    const counter = document.getElementById('q-counter');
+
+    numEl.textContent = `Question ${index + 1} of ${QUESTIONS.length}`;
+    textEl.textContent = q.text;
+    hintEl.innerHTML = q.hint;
+    inputEl.placeholder = q.placeholder;
+    inputEl.value = answers[index];
+
+    backBtn.style.display = index === 0 ? 'none' : 'block';
+    nextBtn.textContent = index === QUESTIONS.length - 1 ? 'Build My Profile →' : 'Continue →';
+    counter.textContent = `${index + 1} / ${QUESTIONS.length}`;
+
+    // Progress dots
+    document.querySelectorAll('.q-dot').forEach((dot, i) => {
+      dot.classList.remove('done', 'active');
+      if (i < index) dot.classList.add('done');
+      if (i === index) dot.classList.add('active');
+    });
+
+    inputEl.focus();
+  }
+
+  // ── NEXT ────────────────────────────────────────────────────
+  function nextQuestion() {
+    const input = document.getElementById('q-input');
+    const val = input.value.trim();
+
+    if (!val) {
+      input.style.borderColor = 'rgba(255,36,36,0.6)';
+      input.placeholder = 'Please share something — even a few words helps.';
+      setTimeout(() => {
+        input.style.borderColor = '';
+        input.placeholder = QUESTIONS[currentQ].placeholder;
+      }, 2000);
+      return;
+    }
+
+    answers[currentQ] = val;
+
+    if (currentQ < QUESTIONS.length - 1) {
+      currentQ++;
+      renderQuestion(currentQ);
+    } else {
+      submitAnswers();
+    }
+  }
+
+  // ── BACK ────────────────────────────────────────────────────
+  function prevQuestion() {
+    answers[currentQ] = document.getElementById('q-input').value;
+    currentQ--;
+    renderQuestion(currentQ);
+  }
+
+  // Enter key support
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && e.metaKey) nextQuestion();
+  });
+
+  // ── SUBMIT + LOADING ────────────────────────────────────────
+  async function submitAnswers() {
+    showScreen('loading');
+    runLoadingAnimation();
+
+    // Mark demo as submitted
+    localStorage.setItem('cc_demo_complete', 'true');
+
+    const prompt = buildPrompt();
+
+    try {
+      const result = await callClaudeAPI(prompt);
+      showReport(result);
+    } catch (err) {
+      // Fallback demo report if API not connected
+      console.log('API not connected — showing demo report');
+      showReport(getDemoReport());
+    }
+  }
+
+  // ── LOADING ANIMATION ───────────────────────────────────────
+  function runLoadingAnimation() {
+    const steps = [
+      { id: 'lstep-0', status: 'Identifying your niche...', delay: 0 },
+      { id: 'lstep-1', status: 'Researching content performance...', delay: 2000 },
+      { id: 'lstep-2', status: 'Mapping audience psychology...', delay: 5000 },
+      { id: 'lstep-3', status: 'Scanning brand spend data...', delay: 8000 },
+      { id: 'lstep-4', status: 'Building your profile...', delay: 11000 },
+    ];
+
+    steps.forEach((step, i) => {
+      setTimeout(() => {
+        if (i > 0) {
+          const prev = document.getElementById(steps[i-1].id);
+          prev.classList.remove('active');
+          prev.classList.add('done');
+          prev.querySelector('.step-icon').textContent = '✓';
+        }
+        const el = document.getElementById(step.id);
+        el.classList.add('active');
+        document.getElementById('load-status').textContent = step.status;
+      }, step.delay);
+    });
+  }
+
+  // ── BUILD PROMPT ────────────────────────────────────────────
+  function buildPrompt() {
+    return `You are the Creator Copilot demographic intelligence system. Client email: ${clientEmail}. A client has answered five intake questions. Based on their answers, generate a complete audience profile.
+
+CLIENT ANSWERS:
+Q1 - What they do and why they started: "${answers[0]}"
+Q2 - What they make/do in plain language: "${answers[1]}"
+Q3 - The feeling they want to create: "${answers[2]}"
+Q4 - Who needs this most right now: "${answers[3]}"
+Q5 - Creator/brand whose audience fits: "${answers[4]}"
+
+Generate a complete audience profile with these exact sections. Be specific, psychological, and research-driven. Never be vague. Every insight should feel like it was built specifically for this person.
+
+Format your response as JSON with these exact keys:
+{
+  "who": "2-3 sentences describing exactly who this audience is — age range, life stage, daily reality, what they're dealing with right now",
+  "psychology": "2-3 sentences on what drives them psychologically — their hidden fear, their core desire, what they believe about themselves that isn't serving them",
+  "language": "The exact words, phrases, and hooks that stop this audience mid-scroll. What do they say to themselves? What would make them stop and think 'this is for me'?",
+  "where": "Exactly where this audience lives online — specific subreddits, hashtag communities, platform behavior, what they search, what accounts they follow",
+  "brands": "3-5 specific brands or brand categories actively trying to reach this exact audience right now and why they're a fit",
+  "hook": "The single most powerful hook sentence to stop this audience's scroll — write it as if it's the first line of a video script"
+}
+
+Return ONLY the JSON object. No extra text.`;
+  }
+
+  // ── CALL CLAUDE API ─────────────────────────────────────────
+  // ⚡ REPLACE THIS URL with your Vercel/Netlify function URL when deploying
+  const API_ENDPOINT = '/api/generate';
+
+  async function callClaudeAPI(prompt) {
+    const response = await fetch(API_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt })
+    });
+
+    if (!response.ok) throw new Error('API error');
+    const data = await response.json();
+
+    // Parse the JSON from Claude's response
+    const text = data.content[0].text;
+    const clean = text.replace(/```json|```/g, '').trim();
+    return JSON.parse(clean);
+  }
+
+  // ── DEMO REPORT (fallback when API not connected) ───────────
+  function getDemoReport() {
+    // This generates a contextual demo based on their answers
+    const q1 = answers[0].toLowerCase();
+    const isMusic = q1.includes('music') || q1.includes('song') || q1.includes('artist') || q1.includes('band');
+    const isFitness = q1.includes('fit') || q1.includes('gym') || q1.includes('train') || q1.includes('health');
+    const isCoach = q1.includes('coach') || q1.includes('consult') || q1.includes('help people');
+    const isFood = q1.includes('food') || q1.includes('cook') || q1.includes('restaurant') || q1.includes('chef');
+
+    if (isMusic) {
+      return {
+        who: "Adults 22-34, mostly women, who use music as emotional processing rather than background noise. They're going through something — a transition, a heartbreak, a period of feeling lost — and they actively seek out artists who articulate what they can't say themselves. They're loyal listeners who follow artists, not algorithms.",
+        psychology: "Their hidden fear is that they're falling behind their peers while feeling things too deeply to function at the pace the world wants them to. Their core desire is to feel understood without having to explain themselves. They're drawn to art that validates the complexity of what they're experiencing.",
+        language: "'This song found me at exactly the right moment.' 'I didn't know I needed to hear this.' 'Why does this feel like it was written about my life.' Hooks that work: leading with a specific emotion or moment rather than describing the music itself.",
+        where: "Deeply embedded in Spotify playlist communities, r/indieheads, r/ifyoulikeblank, Last.fm, and late-night TikTok. They follow artists on Instagram more than anywhere else. They share music in close friend stories and DMs — not public posts. They read lyrics.",
+        brands: "Spotify (creator programs), Apple Music (indie artist features), VSCO and lifestyle apps targeting creatives, independent clothing brands with artistic identity, mental health apps like Calm and Headspace",
+        hook: "I wrote this song at 2am and I wasn't going to post it. But I think someone needed to hear it."
+      };
+    } else if (isFitness) {
+      return {
+        who: "Women 32-48 who exercise regularly but have stopped expecting results. They're consistent — they show up — but something isn't working and they've run out of explanations that don't involve blaming themselves. They're past the beginner phase but not seeing the progress beginners seem to get.",
+        psychology: "Their hidden fear is that their body has fundamentally changed and the version they want is no longer available to them. Their core desire is to feel physically capable and confident without fitness consuming their entire identity or requiring perfection. They want a system that works for a real life.",
+        language: "'I do everything right and nothing moves.' 'I've tried everything.' 'My metabolism is broken.' 'This worked until it didn't.' Hooks: speaking to the consistency without results experience rather than motivation or transformation language.",
+        where: "r/XXFITNESS, r/Peloton, r/over40fitness. Facebook groups around perimenopause and hormonal health. YouTube channels covering metabolic health for women. Instagram accounts focused on sustainable fitness over aesthetics.",
+        brands: "Lululemon, Whoop, Oura Ring, supplement brands targeting women over 35, telehealth platforms, nutrition apps, activewear brands positioned around function over aesthetics",
+        hook: "I trained 5 days a week for 8 months and gained 4 pounds. Here's what I finally figured out."
+      };
+    } else {
+      return {
+        who: "Adults 28-42 who are actively building something — a skill, a business, a creative practice — and feel like they're doing it without a clear roadmap. They're motivated and capable but often feel like everyone else has access to information or community they don't. They follow people who demystify things.",
+        psychology: "Their hidden fear is that they're working hard in the wrong direction and will realize too late. Their core desire is clarity — a trusted voice that tells them specifically what to do and why it works. They're skeptical of generic advice and highly responsive to specificity and evidence.",
+        language: "'Why didn't anyone tell me this earlier.' 'This is the most useful thing I've seen on this topic.' 'Saving this.' They respond to specificity, counterintuitive insights, and content that gives them something immediately actionable.",
+        where: "Reddit communities specific to their interest, YouTube for deep dives, newsletters, Twitter/X for real-time conversation, podcast communities. They follow accounts that consistently deliver value over personality.",
+        brands: "Tools and software in their space, education platforms, productivity and focus brands, professional development services, brands that position around expertise and craft",
+        hook: "The thing nobody tells you when you're starting out — and the reason most people quit before it gets good."
+      };
+    }
+  }
+
+  // ── SHOW REPORT ─────────────────────────────────────────────
+  function showReport(data) {
+    showScreen('report');
+
+    const sections = [
+      { icon: '👥', label: 'Who They Are', key: 'who' },
+      { icon: '🧠', label: 'What Drives Them', key: 'psychology' },
+      { icon: '💬', label: 'Language That Stops Their Scroll', key: 'language' },
+      { icon: '📍', label: 'Where They Live Online', key: 'where' },
+      { icon: '💰', label: 'Brands That Want Them', key: 'brands' },
+      { icon: '⚡', label: 'Your Most Powerful Hook', key: 'hook' },
+    ];
+
+    const body = document.getElementById('report-body');
+    body.innerHTML = '';
+
+    sections.forEach((sec, i) => {
+      const el = document.createElement('div');
+      el.className = 'report-section';
+      el.style.animationDelay = `${i * 0.15}s`;
+      el.style.opacity = '0';
+      el.style.animation = `fadeUp 0.6s both ${i * 0.12}s`;
+
+      el.innerHTML = `
+        <div class="rs-header">
+          <span class="rs-icon">${sec.icon}</span>
+          <span class="rs-label">${sec.label}</span>
+        </div>
+        <div class="rs-content" id="rc-${i}"></div>
+      `;
+      body.appendChild(el);
+
+      // Typewriter effect for each section
+      const content = data[sec.key] || '';
+      typewrite(document.getElementById(`rc-${i}`), content, i * 400);
+    });
+  }
+
+  // ── TYPEWRITER ───────────────────────────────────────────────
+  function typewrite(el, text, delay) {
+    setTimeout(() => {
+      let i = 0;
+      const cursor = document.createElement('span');
+      cursor.className = 'cursor';
+      el.appendChild(cursor);
+
+      const speed = Math.max(8, Math.min(20, 2000 / text.length));
+
+      const interval = setInterval(() => {
+        if (i < text.length) {
+          cursor.before(document.createTextNode(text[i]));
+          i++;
+        } else {
+          clearInterval(interval);
+          cursor.remove();
+        }
+      }, speed);
+    }, delay);
+  }
+
+</script>
+</body>
+</html>
