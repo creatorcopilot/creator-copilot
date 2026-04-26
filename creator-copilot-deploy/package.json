@@ -1,11 +1,9 @@
 {
   "name": "creator-copilot",
   "version": "1.0.0",
-  "description": "Creator Copilot — Done for you content strategy and brand deal system",
-  "main": "index.js",
+  "description": "Creator Copilot \u2014 Done for you content strategy and brand deal system",
   "scripts": {
-    "dev": "vercel dev",
-    "deploy": "vercel --prod"
+    "build": "echo Build complete"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.24.0",
