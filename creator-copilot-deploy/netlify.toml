@@ -1,6 +1,7 @@
 [build]
   publish = "public"
   functions = "api"
+  command = "npm install"
 
 [[redirects]]
   from = "/demographic-builder"
