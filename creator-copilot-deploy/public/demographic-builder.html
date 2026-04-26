@@ -823,19 +823,19 @@
     </li>
     <li class="load-step" id="lstep-1">
       <div class="step-icon">2</div>
-      <span>Researching your niche across TikTok and Instagram</span>
+      <span>Searching TikTok and Instagram for live audience data</span>
     </li>
     <li class="load-step" id="lstep-2">
       <div class="step-icon">3</div>
-      <span>Mapping audience psychology and hidden drivers</span>
+      <span>Researching your reference creator's audience right now</span>
     </li>
     <li class="load-step" id="lstep-3">
       <div class="step-icon">4</div>
-      <span>Identifying brands actively spending in your space</span>
+      <span>Mapping psychology, language, and hidden drivers</span>
     </li>
     <li class="load-step" id="lstep-4">
       <div class="step-icon">5</div>
-      <span>Building your complete audience profile</span>
+      <span>Building your complete profile and content strategy</span>
     </li>
   </ul>
 </div>
@@ -942,12 +942,8 @@
 
     clientEmail = val;
 
-    // Save email to localStorage so intake form can check it
-    localStorage.setItem('cc_email', val);
-    localStorage.setItem('cc_demo_complete', 'pending');
-
-    showScreen('questions');
-    renderQuestion(0);
+    // Check if this email already has a profile in the system
+    checkExistingProfile(val);
   }
 
   // Allow enter key on email field
@@ -1030,7 +1026,8 @@
     showScreen('loading');
     runLoadingAnimation();
 
-    // Mark demo as submitted
+    // Save email to localStorage for intake form check
+    localStorage.setItem('cc_email', clientEmail);
     localStorage.setItem('cc_demo_complete', 'true');
 
     const prompt = buildPrompt();
@@ -1039,9 +1036,14 @@
       const result = await callClaudeAPI(prompt);
       showReport(result);
     } catch (err) {
-      // Fallback demo report if API not connected
-      console.log('API not connected — showing demo report');
-      showReport(getDemoReport());
+      console.error('API error:', err);
+      // Show error message instead of fake fallback
+      showScreen('loading');
+      document.getElementById('load-status').textContent = 'Something went wrong — please try again';
+      document.getElementById('load-title').textContent = 'ONE MOMENT';
+      setTimeout(() => {
+        showScreen('intro');
+      }, 3000);
     }
   }
 
@@ -1049,10 +1051,10 @@
   function runLoadingAnimation() {
     const steps = [
       { id: 'lstep-0', status: 'Identifying your niche...', delay: 0 },
-      { id: 'lstep-1', status: 'Researching content performance...', delay: 2000 },
-      { id: 'lstep-2', status: 'Mapping audience psychology...', delay: 5000 },
-      { id: 'lstep-3', status: 'Scanning brand spend data...', delay: 8000 },
-      { id: 'lstep-4', status: 'Building your profile...', delay: 11000 },
+      { id: 'lstep-1', status: 'Searching TikTok and Instagram for your audience...', delay: 3000 },
+      { id: 'lstep-2', status: 'Researching your reference creator...', delay: 7000 },
+      { id: 'lstep-3', status: 'Mapping audience psychology and language...', delay: 12000 },
+      { id: 'lstep-4', status: 'Building your complete profile...', delay: 17000 },
     ];
 
     steps.forEach((step, i) => {
@@ -1104,16 +1106,62 @@ Return ONLY the JSON object. No extra text.`;
     const response = await fetch(API_ENDPOINT, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt })
+      body: JSON.stringify({ prompt, email: clientEmail, answers })
     });
 
-    if (!response.ok) throw new Error('API error');
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(errData.error || 'API error ' + response.status);
+    }
     const data = await response.json();
 
     // Parse the JSON from Claude's response
     const text = data.content[0].text;
     const clean = text.replace(/```json|```/g, '').trim();
     return JSON.parse(clean);
+  }
+
+  // ── CHECK EXISTING PROFILE ───────────────────────────────────
+  async function checkExistingProfile(email) {
+    try {
+      const response = await fetch('/.netlify/functions/check-profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.exists && data.report) {
+          // Show welcome back screen with existing report
+          showScreen('loading');
+          document.getElementById('load-status').textContent = 'Found your profile...';
+          setTimeout(() => {
+            showWelcomeBack(data.report);
+          }, 1500);
+          return;
+        }
+      }
+    } catch(e) {
+      console.log('Profile check failed, continuing to questions');
+    }
+
+    // No existing profile — go to questions
+    showScreen('questions');
+    renderQuestion(0);
+  }
+
+  // ── WELCOME BACK SCREEN ──────────────────────────────────────
+  function showWelcomeBack(report) {
+    // Add welcome back banner to report header
+    const headerEl = document.getElementById('report-header');
+    if (headerEl) {
+      const banner = document.createElement('div');
+      banner.style.cssText = 'background:rgba(0,204,102,0.08);border:1px solid rgba(0,204,102,0.3);border-left:4px solid #00CC66;padding:14px 20px;margin-bottom:24px;';
+      banner.innerHTML = '<div style="font-family:DM Mono,monospace;font-size:10px;letter-spacing:2px;color:#00CC66;text-transform:uppercase;margin-bottom:4px;">✓ Welcome Back</div><div style="font-size:13px;font-weight:300;color:rgba(255,255,255,0.7);">We already have your audience profile on file. Here it is.</div>';
+      headerEl.prepend(banner);
+    }
+    showReport(report);
   }
 
   // ── DEMO REPORT (fallback when API not connected) ───────────
@@ -1166,6 +1214,7 @@ Return ONLY the JSON object. No extra text.`;
       { icon: '📍', label: 'Where They Live Online', key: 'where' },
       { icon: '💰', label: 'Brands That Want Them', key: 'brands' },
       { icon: '⚡', label: 'Your Most Powerful Hook', key: 'hook' },
+      { icon: '🗓️', label: 'Your First Month Content Strategy', key: 'strategy', isStrategy: true },
     ];
 
     const body = document.getElementById('report-body');
@@ -1174,22 +1223,42 @@ Return ONLY the JSON object. No extra text.`;
     sections.forEach((sec, i) => {
       const el = document.createElement('div');
       el.className = 'report-section';
-      el.style.animationDelay = `${i * 0.15}s`;
       el.style.opacity = '0';
       el.style.animation = `fadeUp 0.6s both ${i * 0.12}s`;
 
-      el.innerHTML = `
-        <div class="rs-header">
-          <span class="rs-icon">${sec.icon}</span>
-          <span class="rs-label">${sec.label}</span>
-        </div>
-        <div class="rs-content" id="rc-${i}"></div>
-      `;
-      body.appendChild(el);
+      if (sec.isStrategy && data[sec.key] && data[sec.key].angles) {
+        // Render strategy section with three angle cards
+        const angles = data[sec.key].angles || [];
+        el.innerHTML = `
+          <div class="rs-header">
+            <span class="rs-icon">${sec.icon}</span>
+            <span class="rs-label">${sec.label}</span>
+          </div>
+          <div class="rs-content">
+            ${angles.map((angle, ai) => `
+              <div style="padding:16px 0;border-bottom:1px solid rgba(255,255,255,0.06);">
+                <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--red);text-transform:uppercase;margin-bottom:6px;">Angle ${ai + 1}</div>
+                <div style="font-weight:700;font-size:15px;color:var(--white);margin-bottom:6px;">${angle.title || ''}</div>
+                <div style="font-size:13px;font-weight:300;color:var(--gray-light);line-height:1.7;">${angle.why || ''}</div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+        body.appendChild(el);
+      } else {
+        el.innerHTML = `
+          <div class="rs-header">
+            <span class="rs-icon">${sec.icon}</span>
+            <span class="rs-label">${sec.label}</span>
+          </div>
+          <div class="rs-content" id="rc-${i}"></div>
+        `;
+        body.appendChild(el);
 
-      // Typewriter effect for each section
-      const content = data[sec.key] || '';
-      typewrite(document.getElementById(`rc-${i}`), content, i * 400);
+        // Typewriter effect for each section
+        const sectionContent = data[sec.key] || '';
+        typewrite(document.getElementById(`rc-${i}`), typeof sectionContent === 'string' ? sectionContent : JSON.stringify(sectionContent), i * 400);
+      }
     });
   }
 
