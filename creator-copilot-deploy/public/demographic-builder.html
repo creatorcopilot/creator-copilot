@@ -1246,7 +1246,10 @@ Return ONLY the JSON object. No extra text.`;
 
   // ── CALL CLAUDE API ─────────────────────────────────────────
   // ⚡ REPLACE THIS URL with your Vercel/Netlify function URL when deploying
-  const API_ENDPOINT = '/.netlify/functions/generate';
+  // Direct Supabase configuration
+  const SUPABASE_URL = 'https://twkmpnezpuchelblxjfs.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR3a21wbmV6cHVjaGVsYmx4amZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU1NjI2MjAsImV4cCI6MjA2MTEzODYyMH0.Vl6lJVEwbNHCGHvLJJXZaCVBLxrDq3ruAVNaFxoUIMs';
+  const EDGE_FUNCTION_URL = SUPABASE_URL + '/functions/v1/demographic-builder';
 
   async function callClaudeAPI(prompt) {
     const response = await fetch(API_ENDPOINT, {
