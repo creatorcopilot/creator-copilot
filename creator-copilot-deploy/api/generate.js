@@ -19,16 +19,18 @@ exports.handler = async function(event, context) {
   try { body = JSON.parse(event.body); }
   catch(e) { return { statusCode: 400, headers: HEADERS, body: JSON.stringify({ error: 'Invalid JSON' }) }; }
 
-  // ── POLL MODE: check if job is complete ──────────────────────
+  // ── POLL MODE ────────────────────────────────────────────────
   if (body.jobId && !body.prompt) {
     try {
-      const { data: job } = await supabase
+      const { data: job, error } = await supabase
         .from('demo_jobs')
         .select('status, report')
         .eq('id', body.jobId)
         .single();
 
-      if (!job) return { statusCode: 404, headers: HEADERS, body: JSON.stringify({ error: 'Job not found' }) };
+      if (error || !job) {
+        return { statusCode: 404, headers: HEADERS, body: JSON.stringify({ error: 'Job not found' }) };
+      }
 
       return {
         statusCode: 200,
@@ -40,19 +42,19 @@ exports.handler = async function(event, context) {
     }
   }
 
-  // ── SUBMIT MODE: create job and trigger edge function ────────
+  // ── SUBMIT MODE ──────────────────────────────────────────────
   const { prompt, email, answers } = body;
   if (!prompt || !email) {
     return { statusCode: 400, headers: HEADERS, body: JSON.stringify({ error: 'Missing prompt or email' }) };
   }
 
-  // Create or update client record
+  // Ensure client record exists
   try {
     const { data: existing } = await supabase.from('clients').select('id').eq('email', email).single();
     if (!existing) {
       await supabase.from('clients').insert({ email, tier: 'demo', status: 'active' });
     }
-  } catch(e) {}
+  } catch(e) { /* ignore - client may already exist */ }
 
   // Create job record
   const { data: job, error: jobError } = await supabase
@@ -62,28 +64,41 @@ exports.handler = async function(event, context) {
     .single();
 
   if (jobError) {
-    return { statusCode: 500, headers: HEADERS, body: JSON.stringify({ error: 'Failed to create job' }) };
+    console.error('Job creation error:', jobError);
+    return { statusCode: 500, headers: HEADERS, body: JSON.stringify({ error: 'Failed to create job: ' + jobError.message }) };
   }
 
-  // Trigger Supabase Edge Function to run Claude in background
-  // Replace YOUR_SUPABASE_PROJECT_ID with your actual project ID: twkmpnezpuchelblxjfs
-  const edgeFunctionUrl = `${process.env.SUPABASE_URL}/functions/v1/demographic-builder`;
+  console.log('Job created:', job.id, 'calling edge function...');
 
-  fetch(edgeFunctionUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_KEY}`
-    },
-    body: JSON.stringify({
-      jobId: job.id,
-      prompt,
-      supabaseUrl: process.env.SUPABASE_URL,
-      supabaseKey: process.env.SUPABASE_SERVICE_KEY
-    })
-  }).catch(e => console.error('Edge function trigger error:', e));
+  // Call Supabase Edge Function
+  // Use the anon key for the Authorization header when calling edge functions
+  const edgeFunctionUrl = process.env.SUPABASE_URL + '/functions/v1/demographic-builder';
+  
+  try {
+    const edgeResponse = await fetch(edgeFunctionUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + process.env.SUPABASE_SERVICE_KEY,
+        'apikey': process.env.SUPABASE_ANON_KEY
+      },
+      body: JSON.stringify({
+        jobId: job.id,
+        prompt: prompt
+      })
+    });
 
-  // Return job ID immediately
+    const edgeText = await edgeResponse.text();
+    console.log('Edge function response:', edgeResponse.status, edgeText);
+
+    if (!edgeResponse.ok) {
+      console.error('Edge function call failed:', edgeResponse.status, edgeText);
+    }
+  } catch(fetchErr) {
+    console.error('Edge function fetch error:', fetchErr.message);
+  }
+
+  // Return job ID regardless - polling will handle the result
   return {
     statusCode: 200,
     headers: HEADERS,
