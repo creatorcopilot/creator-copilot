@@ -734,6 +734,86 @@
 
   .email-note span { color: rgba(255,36,36,0.5); }
 
+
+  /* ── QUESTION EXAMPLES ──────────────────────────────────────── */
+  .q-examples-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--red);
+    text-transform: uppercase;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 8px 0;
+    margin-bottom: 8px;
+    transition: opacity 0.2s;
+  }
+
+  .q-examples-toggle:hover { opacity: 0.7; }
+
+  .q-examples-toggle .arrow {
+    transition: transform 0.2s;
+    display: inline-block;
+  }
+
+  .q-examples-toggle.open .arrow { transform: rotate(180deg); }
+
+  .q-examples-panel {
+    display: none;
+    background: var(--gray-mid);
+    border: 1px solid rgba(255,36,36,0.15);
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+
+  .q-examples-panel.show { display: block; }
+
+  .q-example-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .q-example-item:last-child { border-bottom: none; }
+
+  .q-example-item:hover { background: rgba(255,36,36,0.06); }
+
+  .q-example-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+
+  .q-example-niche {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--red);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .q-example-text {
+    font-size: 13px;
+    font-weight: 300;
+    color: rgba(244,244,239,0.75);
+    line-height: 1.6;
+  }
+
+  .q-example-use {
+    font-size: 10px;
+    color: var(--red);
+    margin-top: 4px;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .q-example-item:hover .q-example-use { opacity: 1; }
+
 </style>
 </head>
 <body>
@@ -882,14 +962,26 @@
   // ── QUESTIONS DATA ──────────────────────────────────────────
   const QUESTIONS = [
     {
-      text: "What do you do — and what made you start doing it?",
-      hint: "e.g. <strong>\"I'm a singer-songwriter. I started writing music after a breakup because I couldn't find songs that said what I was feeling.\"</strong> — Tell us your story.",
-      placeholder: "I make / I do / I create..."
+      text: "What do you do — and what made you start?",
+      hint: "e.g. <strong>\"I'm a singer-songwriter — I started after a breakup because I couldn't find songs that said what I felt.\"</strong> or <strong>\"I run a handyman service — I started because I got tired of seeing people get ripped off by contractors.\"</strong>",
+      placeholder: "I make / I do / I run / I help people with...",
+      examples: [
+        { icon: "🎵", niche: "Musician", text: "I make indie folk music about heartbreak and growing up. I started because I went through a bad breakup and couldn't find songs that said what I was feeling." },
+        { icon: "🔧", niche: "Handyman", text: "I run a handyman service. I started because I got tired of watching people get overcharged by contractors for simple jobs." },
+        { icon: "🍕", niche: "Restaurant", text: "I own a Mexican restaurant. I started because I wanted to bring the food I grew up eating to people in my city." },
+        { icon: "🏋️", niche: "Fitness Coach", text: "I'm a fitness coach for women over 40. I started because I was exactly where my clients are — nothing was working and I figured it out myself." }
+      ]
     },
     {
-      text: "Describe what you make or do like you're explaining it to someone who has never heard of it.",
-      hint: "e.g. <strong>\"I make slow, moody songs about feeling lost in your twenties — like if you were driving alone at night and needed something that understood you.\"</strong>",
-      placeholder: "In simple terms, what I do is..."
+      text: "Describe what you do like you're explaining it to a friend who has no idea.",
+      hint: "Keep it simple. No industry words. Just what you actually do and who it helps.",
+      placeholder: "In simple terms, what I do is...",
+      examples: [
+        { icon: "🎵", niche: "Musician", text: "I make slow moody songs about feeling lost — like if you were driving alone at night and needed music that actually gets it." },
+        { icon: "🔧", niche: "Handyman", text: "I fix things around people's homes — leaky faucets, broken doors, stuff that's been on their to-do list for months. I show up when I say I will and I charge a fair price." },
+        { icon: "🍕", niche: "Restaurant", text: "I make authentic Mexican food the way my grandmother made it — not the Americanized version. People come in once and it becomes their regular spot." },
+        { icon: "🏋️", niche: "Fitness Coach", text: "I help women over 40 build a fitness routine that actually fits into a real life — not a program that requires two hours a day and a perfect diet." }
+      ]
     },
     {
       text: "When someone experiences what you do — what do you want them to feel in that moment?",
@@ -897,9 +989,15 @@
       placeholder: "I want them to feel..."
     },
     {
-      text: "Think about the person who needs what you do the most right now. What's going on in their life?",
-      hint: "e.g. <strong>\"She's 38, works full time, tried three gyms this year. Goes for two weeks then stops. Nothing works and she's starting to think her body just doesn't respond anymore.\"</strong>",
-      placeholder: "They're probably..."
+      text: "Picture the person who needs you most right now. What's going on in their life?",
+      hint: "Describe a real person's situation — not a demographic. What are they dealing with? What have they tried? What are they frustrated about?",
+      placeholder: "They're probably dealing with...",
+      examples: [
+        { icon: "🎵", niche: "Musician", text: "They're going through a breakup or a hard time and scrolling at 1am looking for music that actually gets it. They're tired of songs that feel fake." },
+        { icon: "🔧", niche: "Handyman", text: "They've got a list of things broken around the house that's been growing for months. They've been burned by unreliable contractors before and just want someone who shows up and does the job." },
+        { icon: "🍕", niche: "Restaurant", text: "They're tired of the same restaurants and want something that feels special without being overpriced. They want a place they can bring family or a date and actually impress them." },
+        { icon: "🏋️", niche: "Fitness Coach", text: "She's 38, tried three different gyms, goes for two weeks then stops. Eats pretty well. Nothing is working and she's starting to think her body just doesn't respond anymore." }
+      ]
     },
     {
       text: "Is there anyone — a creator, artist, brand, or public figure — whose audience feels like your kind of people?",
@@ -973,6 +1071,54 @@
     backBtn.style.display = index === 0 ? 'none' : 'block';
     nextBtn.textContent = index === QUESTIONS.length - 1 ? 'Build My Profile →' : 'Continue →';
     counter.textContent = `${index + 1} / ${QUESTIONS.length}`;
+
+    // Add examples dropdown if question has examples
+    const existingExamples = document.getElementById('q-examples-wrap');
+    if (existingExamples) existingExamples.remove();
+
+    if (q.examples && q.examples.length > 0) {
+      const wrap = document.createElement('div');
+      wrap.id = 'q-examples-wrap';
+
+      const toggle = document.createElement('button');
+      toggle.className = 'q-examples-toggle';
+      toggle.innerHTML = 'Not sure? See examples <span class="arrow">↓</span>';
+      toggle.onclick = function() {
+        const panel = document.getElementById('q-examples-panel');
+        const isOpen = panel.classList.contains('show');
+        panel.classList.toggle('show', !isOpen);
+        toggle.classList.toggle('open', !isOpen);
+      };
+
+      const panel = document.createElement('div');
+      panel.className = 'q-examples-panel';
+      panel.id = 'q-examples-panel';
+
+      q.examples.forEach(ex => {
+        const item = document.createElement('div');
+        item.className = 'q-example-item';
+        item.innerHTML = `
+          <div class="q-example-icon">${ex.icon}</div>
+          <div>
+            <div class="q-example-niche">${ex.niche}</div>
+            <div class="q-example-text">${ex.text}</div>
+            <div class="q-example-use">Tap to use as a starting point →</div>
+          </div>`;
+        item.onclick = function() {
+          inputEl.value = ex.text;
+          panel.classList.remove('show');
+          toggle.classList.remove('open');
+          inputEl.focus();
+        };
+        panel.appendChild(item);
+      });
+
+      wrap.appendChild(toggle);
+      wrap.appendChild(panel);
+
+      // Insert after hint
+      hintEl.after(wrap);
+    }
 
     // Progress dots
     document.querySelectorAll('.q-dot').forEach((dot, i) => {
