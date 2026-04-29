@@ -1404,24 +1404,51 @@ Return ONLY the JSON object. No extra text.`;
       el.style.opacity = '0';
       el.style.animation = `fadeUp 0.6s both ${i * 0.12}s`;
 
-      if (sec.isStrategy && data[sec.key] && data[sec.key].angles) {
-        // Render strategy section with three angle cards
-        const angles = data[sec.key].angles || [];
-        el.innerHTML = `
-          <div class="rs-header">
-            <span class="rs-icon">${sec.icon}</span>
-            <span class="rs-label">${sec.label}</span>
-          </div>
-          <div class="rs-content">
-            ${angles.map((angle, ai) => `
-              <div style="padding:16px 0;border-bottom:1px solid rgba(255,255,255,0.06);">
-                <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--red);text-transform:uppercase;margin-bottom:6px;">Angle ${ai + 1}</div>
-                <div style="font-weight:700;font-size:15px;color:var(--white);margin-bottom:6px;">${angle.title || ''}</div>
-                <div style="font-size:13px;font-weight:300;color:var(--gray-light);line-height:1.7;">${angle.why || ''}</div>
-              </div>
-            `).join('')}
-          </div>
-        `;
+      if (sec.isStrategy) {
+        // Handle strategy section — Claude may return it in different formats
+        const stratData = data[sec.key];
+        let angles = [];
+
+        if (stratData && Array.isArray(stratData.angles)) {
+          angles = stratData.angles;
+        } else if (Array.isArray(stratData)) {
+          angles = stratData;
+        } else if (stratData && typeof stratData === 'object') {
+          // Try to extract angles from any nested structure
+          const vals = Object.values(stratData);
+          if (vals.length > 0 && Array.isArray(vals[0])) angles = vals[0];
+          else angles = vals.map((v, i) => ({ title: `Angle ${i+1}`, why: typeof v === 'string' ? v : JSON.stringify(v) }));
+        } else if (typeof stratData === 'string') {
+          angles = [{ title: 'Content Strategy', why: stratData }];
+        }
+
+        if (angles.length > 0) {
+          el.innerHTML = `
+            <div class="rs-header">
+              <span class="rs-icon">${sec.icon}</span>
+              <span class="rs-label">${sec.label}</span>
+            </div>
+            <div class="rs-content">
+              ${angles.map((angle, ai) => `
+                <div style="padding:16px 0;border-bottom:1px solid rgba(255,255,255,0.06);">
+                  <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--red);text-transform:uppercase;margin-bottom:6px;">Angle ${ai + 1}</div>
+                  <div style="font-weight:700;font-size:15px;color:var(--white);margin-bottom:6px;">${angle.title || angle.name || ''}</div>
+                  <div style="font-size:13px;font-weight:300;color:var(--gray-light);line-height:1.7;">${angle.why || angle.description || angle.reason || ''}</div>
+                </div>
+              `).join('')}
+            </div>
+          `;
+        } else {
+          el.innerHTML = `
+            <div class="rs-header">
+              <span class="rs-icon">${sec.icon}</span>
+              <span class="rs-label">${sec.label}</span>
+            </div>
+            <div class="rs-content" id="rc-${i}"></div>
+          `;
+          const fallback = stratData ? (typeof stratData === 'string' ? stratData : JSON.stringify(stratData)) : '';
+          if (fallback) typewrite(document.getElementById('rc-' + i), fallback, i * 400);
+        }
         body.appendChild(el);
       } else {
         el.innerHTML = `
