@@ -1172,25 +1172,78 @@
     showScreen('loading');
     runLoadingAnimation();
 
-    // Save email to localStorage for intake form check
-    localStorage.setItem('cc_email', clientEmail);
-    localStorage.setItem('cc_demo_complete', 'true');
-
     const prompt = buildPrompt();
 
     try {
-      const result = await callClaudeAPI(prompt);
-      showReport(result);
+      // Submit to Netlify — creates job and fires Edge Function
+      const response = await fetch(API_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt, email: clientEmail, answers })
+      });
+
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || 'Server error ' + response.status);
+      }
+
+      const data = await response.json();
+
+      if (data.jobId) {
+        // Start polling for result
+        pollForResult(data.jobId);
+      } else {
+        throw new Error('No job ID returned');
+      }
+
     } catch (err) {
-      console.error('API error:', err);
-      // Show error message instead of fake fallback
-      showScreen('loading');
+      console.error('Submit error:', err);
       document.getElementById('load-status').textContent = 'Something went wrong — please try again';
-      document.getElementById('load-title').textContent = 'ONE MOMENT';
-      setTimeout(() => {
-        showScreen('intro');
-      }, 3000);
+      setTimeout(() => showScreen('intro'), 3000);
     }
+  }
+
+  // ── POLL FOR RESULT ───────────────────────────────────────────
+  async function pollForResult(jobId) {
+    const maxAttempts = 60;
+    let attempts = 0;
+
+    const poll = async () => {
+      attempts++;
+      if (attempts > maxAttempts) {
+        document.getElementById('load-status').textContent = 'Taking longer than expected — please try again';
+        setTimeout(() => showScreen('intro'), 3000);
+        return;
+      }
+
+      try {
+        const response = await fetch(API_ENDPOINT, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ jobId })
+        });
+
+        const data = await response.json();
+
+        if (data.status === 'complete' && data.report) {
+          localStorage.setItem('cc_email', clientEmail);
+          localStorage.setItem('cc_demo_complete', 'true');
+          showReport(data.report);
+        } else if (data.status === 'error') {
+          document.getElementById('load-status').textContent = 'Something went wrong — please try again';
+          setTimeout(() => showScreen('intro'), 3000);
+        } else {
+          // Still processing
+          setTimeout(poll, 3000);
+        }
+      } catch(e) {
+        console.error('Poll error:', e);
+        setTimeout(poll, 3000);
+      }
+    };
+
+    // Start polling after 5 seconds
+    setTimeout(poll, 5000);
   }
 
   // ── LOADING ANIMATION ───────────────────────────────────────
@@ -1244,31 +1297,7 @@ Format your response as JSON with these exact keys:
 Return ONLY the JSON object. No extra text.`;
   }
 
-  // ── CALL CLAUDE API ─────────────────────────────────────────
-  // ⚡ REPLACE THIS URL with your Vercel/Netlify function URL when deploying
-  // Direct Supabase configuration
-  const SUPABASE_URL = 'https://twkmpnezpuchelblxjfs.supabase.co';
-  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR3a21wbmV6cHVjaGVsYmx4amZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU1NjI2MjAsImV4cCI6MjA2MTEzODYyMH0.Vl6lJVEwbNHCGHvLJJXZaCVBLxrDq3ruAVNaFxoUIMs';
-  const EDGE_FUNCTION_URL = SUPABASE_URL + '/functions/v1/demographic-builder';
-
-  async function callClaudeAPI(prompt) {
-    const response = await fetch(API_ENDPOINT, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt, email: clientEmail, answers })
-    });
-
-    if (!response.ok) {
-      const errData = await response.json().catch(() => ({}));
-      throw new Error(errData.error || 'API error ' + response.status);
-    }
-    const data = await response.json();
-
-    // Parse the JSON from Claude's response
-    const text = data.content[0].text;
-    const clean = text.replace(/```json|```/g, '').trim();
-    return JSON.parse(clean);
-  }
+  const API_ENDPOINT = '/.netlify/functions/generate';
 
   // ── CHECK EXISTING PROFILE ───────────────────────────────────
   async function checkExistingProfile(email) {
