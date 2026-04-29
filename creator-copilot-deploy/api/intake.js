@@ -72,7 +72,7 @@ ${demoReport ? 'DEMOGRAPHIC PROFILE ON FILE: ' + JSON.stringify(demoReport) : ''
 Return JSON with: creatorPersonality, microAudience, contentFingerprint, competitivePosition, scripts (array of 6 with title/hook/script/cta/tiktok_note/instagram_note/caption)${isTier2 ? ', inroSetup (triggerWord/message1/message2/message3), brandReport (weeklyMarketRead/topBrands/pitchEmails)' : ''}`;
 
     const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-6',
       max_tokens: 8000,
       system: MASTER_REFERENCE,
       messages: [{ role: 'user', content: prompt }]

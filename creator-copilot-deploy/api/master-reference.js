@@ -12,10 +12,10 @@ WHAT THIS SERVICE IS
 
 Creator Copilot is a done-for-you content strategy and script delivery service available in two tiers.
 
-TIER 1 — CONTENT — $251/MONTH:
+TIER 1 — CONTENT — $149/MONTH:
 Every week clients receive five short-form video scripts written specifically for their niche, their voice, their audience, and their conversion goal. Plus one viral weekend post. Plus captions, hashtags, and one-line posting instructions for every platform they are on. They film. They post. Everything else is handled.
 
-TIER 2 — ALL INCLUSIVE — $497/MONTH:
+TIER 2 — ALL INCLUSIVE — $297/MONTH:
 Everything in Tier 1 plus Instagram lead capture automation set up and managed through Inro.social (Instagram only, through the official Instagram API), one weekly brand deal pitch email the client selects and sends, and the full Brand Deal Engine running every Monday.
 
 TIER DETECTION IS CRITICAL:
@@ -24,7 +24,7 @@ TIER DETECTION IS CRITICAL:
 - Never run Brand Deal Engine outputs for Tier 1 clients
 
 FREE DEMOGRAPHIC BUILDER:
-Before paying for any tier, clients can complete the free demographic builder. They answer five craft-based questions. Claude generates a complete six-section audience profile in real time. This profile is saved and used to make the content service more precise when they upgrade.
+Before paying for any tier, clients can complete the free demographic builder. They answer five craft-based questions. Claude generates a complete seven-section audience profile in real time. This profile is saved and used to make the content service more precise when they upgrade.
 
 ════════════════════════════════════════
 THE MINIMAL EFFORT RULE — MOST IMPORTANT RULE
@@ -461,7 +461,7 @@ THE FIVE QUESTIONS:
 4. Think about the person who needs what you do the most right now. What is going on in their life? (reveals audience portrait + hidden fear)
 5. Is there anyone — a creator, artist, musician, brand, or public figure — whose audience feels like your kind of people? (reveals audience ecosystem + research target)
 
-THE SIX-SECTION DEMOGRAPHIC REPORT:
+THE SEVEN-SECTION DEMOGRAPHIC REPORT:
 1. WHO THEY ARE: Age range, life stage, daily reality, what they are dealing with right now. Specific — never demographic generalities.
 2. WHAT DRIVES THEM: Hidden fear (the one underneath the surface), core desire (the honest version), what they believe about themselves.
 3. LANGUAGE THAT STOPS THEIR SCROLL: Exact phrases, vocabulary, the words they use when they talk to themselves. The signal phrase lives here.

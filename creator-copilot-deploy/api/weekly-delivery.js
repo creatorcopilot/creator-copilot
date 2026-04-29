@@ -28,7 +28,7 @@ Off limits: ${client.off_limits || 'None'}
 Return JSON: { scripts: array of 6 with title/hook/script/cta/tiktok_note/instagram_note/caption${isTier2 ? ', brandReport: { weeklyMarketRead, topBrands, pitchEmails }' : ''} }`;
 
         const response = await anthropic.messages.create({
-          model: 'claude-sonnet-4-20250514',
+          model: 'claude-sonnet-4-6',
           max_tokens: 6000,
           system: MASTER_REFERENCE,
           messages: [{ role: 'user', content: prompt }]

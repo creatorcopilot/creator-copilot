@@ -45,7 +45,7 @@ Rules: Idea first, under 150 words, subject line leads with concept not creator 
 Return JSON: { subject, body, followUp1, followUp2, followUp3, circleBack }`;
 
     const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-6',
       max_tokens: 1000,
       system: MASTER_REFERENCE,
       messages: [{ role: 'user', content: prompt }]
