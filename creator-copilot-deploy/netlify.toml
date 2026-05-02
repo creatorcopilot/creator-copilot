@@ -3,6 +3,20 @@
   functions = "api"
   command = "npm install"
 
+# ── SCHEDULED FUNCTIONS ────────────────────────────────────────────
+# Weekly delivery — Every Monday at 8am UTC
+[functions."weekly-delivery"]
+  schedule = "0 8 * * 1"
+
+# Daily texts — Every day 9am UTC including Sunday
+[functions."daily-text"]
+  schedule = "0 9 * * *"
+
+# Monthly niche report — 1st of every month at 10am UTC
+[functions."monthly-report"]
+  schedule = "0 10 1 * *"
+
+# ── REDIRECTS ──────────────────────────────────────────────────────
 [[redirects]]
   from = "/demographic-builder"
   to = "/demographic-builder.html"
@@ -11,6 +25,11 @@
 [[redirects]]
   from = "/intake"
   to = "/intake-form.html"
+  status = 200
+
+[[redirects]]
+  from = "/pitch"
+  to = "/pitch.html"
   status = 200
 
 [[redirects]]
