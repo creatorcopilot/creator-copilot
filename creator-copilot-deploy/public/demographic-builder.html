@@ -826,7 +826,7 @@
 <!-- ── SCREEN 1: INTRO ── -->
 <div class="screen active" id="screen-intro">
   <div class="intro-glow"></div>
-  <span class="intro-tag">$50 · One Time · Instant Results</span>
+  <span class="intro-tag">100% Free · No Credit Card · Instant Results</span>
   <h1 class="intro-title">FIND YOUR<br><em>EXACT</em><br>AUDIENCE.</h1>
   <p class="intro-sub">IN UNDER 5 MINUTES.</p>
   <p class="intro-body">
@@ -937,25 +937,74 @@
     <span class="upgrade-eyebrow">Now that we know your audience</span>
     <h3 class="upgrade-title">LET US BUILD THE CONTENT THAT REACHES THEM.</h3>
     <p class="upgrade-body">
-      Every script <strong>engineered for your specific audience.</strong> Designed to stop their scroll, keep them watching, and drive them to act. Delivered every Monday. Done for you.
+      Every script <strong>engineered for your specific audience.</strong> Designed to stop their scroll, keep them watching, and drive them to act. One script texted to your phone every single morning. Done for you.
     </p>
+
+    <!-- Billing toggle -->
+    <div style="display:flex;align-items:center;justify-content:center;gap:14px;margin:0 0 24px;">
+      <span id="ug-monthly-label" style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--white);text-transform:uppercase;cursor:pointer;" onclick="ugSetBilling('monthly')">Monthly</span>
+      <div id="ug-toggle" onclick="ugToggle()" style="width:44px;height:24px;background:var(--gray-mid);border:1px solid rgba(255,255,255,0.1);border-radius:12px;position:relative;cursor:pointer;transition:background 0.3s;flex-shrink:0;">
+        <div id="ug-thumb" style="position:absolute;top:3px;left:3px;width:16px;height:16px;background:white;border-radius:50%;transition:transform 0.3s;"></div>
+      </div>
+      <span id="ug-annual-label" style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--gray-light);text-transform:uppercase;cursor:pointer;" onclick="ugSetBilling('annual')">Annual</span>
+      <span id="ug-save-badge" style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:1px;color:var(--red);border:1px solid rgba(255,36,36,0.3);padding:3px 8px;opacity:0;transition:opacity 0.3s;">Save 2 months</span>
+    </div>
+
     <div class="upgrade-cards">
-      <a href="#" class="upgrade-card featured">
+
+      <!-- Tier 2 — All Inclusive -->
+      <a id="ug-t2-btn" href="https://buy.stripe.com/8x2fZh71t4M78cq8EJ1Jm02" class="upgrade-card featured">
         <div class="uc-tag">Most Popular</div>
         <div class="uc-tier">Tier 2 — All Inclusive</div>
         <div class="uc-name">Content + Brand Deals</div>
-        <div class="uc-price">$497<span>/month</span></div>
-        <div class="uc-desc">5 weekly scripts + brand deal pitches + lead capture automation running 24/7</div>
+        <div class="uc-price" id="ug-t2-price">$297<span>/month</span></div>
+        <div id="ug-t2-annual-note" style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:1px;color:var(--red);margin-bottom:8px;display:none;">Billed as $2,970/year</div>
+        <div class="uc-desc">7 daily scripts texted to your phone every morning + weekly brand deal pitches + Instagram lead capture automation + monthly niche intelligence report</div>
       </a>
-      <a href="#" class="upgrade-card">
+
+      <!-- Tier 1 — Content -->
+      <a id="ug-t1-btn" href="https://buy.stripe.com/14A4gzclNdiD2S6f371Jm00" class="upgrade-card">
         <div class="uc-tier">Tier 1 — Content</div>
         <div class="uc-name">Scripts Only</div>
-        <div class="uc-price">$297<span>/month</span></div>
-        <div class="uc-desc">5 weekly scripts written in your voice, for your exact audience. Delivered every Monday.</div>
+        <div class="uc-price" id="ug-t1-price">$149<span>/month</span></div>
+        <div id="ug-t1-annual-note" style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:1px;color:var(--red);margin-bottom:8px;display:none;">Billed as $1,490/year</div>
+        <div class="uc-desc">7 daily scripts texted to your phone every morning. Built for your exact audience. Say it in your own words — we give you the framework.</div>
       </a>
+
     </div>
+
     <button class="upgrade-skip" onclick="window.location='/'">No thanks, I'll figure it out myself</button>
   </div>
+
+  <script>
+    // Upgrade section billing toggle
+    var ugBilling = 'monthly';
+    var ugPrices = {
+      monthly: { t1: '$149', t1sub: '/month', t1note: false, t1link: 'https://buy.stripe.com/14A4gzclNdiD2S6f371Jm00', t2: '$297', t2sub: '/month', t2note: false, t2link: 'https://buy.stripe.com/8x2fZh71t4M78cq8EJ1Jm02' },
+      annual:  { t1: '$1,490', t1sub: '/year', t1note: true, t1link: 'https://buy.stripe.com/4gM4gzadF5QbboC8EJ1Jm01', t2: '$2,970', t2sub: '/year', t2note: true, t2link: 'https://buy.stripe.com/4gM28rgC32DZcsG5sx1Jm03' }
+    };
+
+    function ugToggle() { ugSetBilling(ugBilling === 'monthly' ? 'annual' : 'monthly'); }
+
+    function ugSetBilling(mode) {
+      ugBilling = mode;
+      var p = ugPrices[mode];
+      var isAnnual = mode === 'annual';
+
+      document.getElementById('ug-toggle').style.background = isAnnual ? 'var(--red)' : 'var(--gray-mid)';
+      document.getElementById('ug-thumb').style.transform = isAnnual ? 'translateX(20px)' : 'translateX(0)';
+      document.getElementById('ug-monthly-label').style.color = isAnnual ? 'var(--gray-light)' : 'var(--white)';
+      document.getElementById('ug-annual-label').style.color = isAnnual ? 'var(--white)' : 'var(--gray-light)';
+      document.getElementById('ug-save-badge').style.opacity = isAnnual ? '1' : '0';
+
+      document.getElementById('ug-t1-price').innerHTML = p.t1 + '<span>' + p.t1sub + '</span>';
+      document.getElementById('ug-t2-price').innerHTML = p.t2 + '<span>' + p.t2sub + '</span>';
+      document.getElementById('ug-t1-annual-note').style.display = p.t1note ? 'block' : 'none';
+      document.getElementById('ug-t2-annual-note').style.display = p.t2note ? 'block' : 'none';
+      document.getElementById('ug-t1-btn').href = p.t1link;
+      document.getElementById('ug-t2-btn').href = p.t2link;
+    }
+  </script>
 </div>
 
 <script>
@@ -1460,9 +1509,34 @@ Return ONLY the JSON object. No extra text.`;
         `;
         body.appendChild(el);
 
-        // Typewriter effect for each section
+        // Render section — bullet points for list-style sections, typewriter for others
         const sectionContent = data[sec.key] || '';
-        typewrite(document.getElementById(`rc-${i}`), typeof sectionContent === 'string' ? sectionContent : JSON.stringify(sectionContent), i * 400);
+        const sectionText = typeof sectionContent === 'string' ? sectionContent : JSON.stringify(sectionContent);
+        const rcEl = document.getElementById('rc-' + i);
+        const bulletSections = ['brands', 'where', 'language'];
+
+        if (bulletSections.includes(sec.key) && sectionText) {
+          const items = sectionText
+            .split(/(?=\d+\.\s)/)
+            .map(function(s) { return s.replace(/^\d+\.\s*/, '').trim(); })
+            .filter(function(s) { return s.length > 0; });
+
+          setTimeout(function() {
+            if (items.length > 1) {
+              items.forEach(function(item, idx) {
+                const bullet = document.createElement('div');
+                bullet.style.cssText = 'display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05);opacity:0;transition:opacity 0.4s;';
+                bullet.innerHTML = '<span style="color:var(--red);font-size:11px;flex-shrink:0;margin-top:3px;">&#8594;</span><span style="font-size:14px;font-weight:300;line-height:1.7;color:rgba(244,244,239,0.85);">' + item + '</span>';
+                rcEl.appendChild(bullet);
+                setTimeout(function() { bullet.style.opacity = '1'; }, idx * 150);
+              });
+            } else {
+              typewrite(rcEl, sectionText, 0);
+            }
+          }, i * 400);
+        } else {
+          typewrite(rcEl, sectionText, i * 400);
+        }
       }
     });
   }

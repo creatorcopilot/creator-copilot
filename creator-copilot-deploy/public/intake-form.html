@@ -817,7 +817,7 @@
   const SUPABASE_URL = 'YOUR_SUPABASE_URL';
   const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
   // Replace with your Vercel backend endpoint
-  const API_ENDPOINT = '/api/intake';
+  const API_ENDPOINT = '/.netlify/functions/intake';
 
   // ── STATE ──────────────────────────────────────────────────
   let currentQ = 0;
@@ -1042,7 +1042,11 @@
       },
     ];
 
-    return qs.filter(q => !q.skip);
+    return qs.filter(q => {
+      if (q.skip) return false;
+      if (q.showIf && !q.showIf(answers)) return false;
+      return true;
+    });
   }
 
   // ── INIT ───────────────────────────────────────────────────
@@ -1089,7 +1093,7 @@
       if (i === index) d.classList.add('active');
     });
 
-    document.getElementById('q-num').textContent = 'Question ' + q.num;
+    document.getElementById('q-num').textContent = q.num.includes('b') ? 'Follow-up' : 'Question ' + q.num;
     document.getElementById('q-text').textContent = q.text;
     document.getElementById('q-sub').textContent = q.sub || '';
     document.getElementById('nav-step').textContent = index + 1 + ' of ' + qs.length;
@@ -1130,6 +1134,7 @@
             <input class="q-input" id="inp-name" placeholder="Full name" type="text" autocomplete="name"/>
             <input class="q-input" id="inp-email" placeholder="Email address" type="email" autocomplete="email" value="${clientEmail || ''}"/>
             <input class="q-input" id="inp-phone" placeholder="Phone number" type="tel" autocomplete="tel"/>
+            <input class="q-input" id="inp-location" placeholder="City, State (e.g. Miami, FL) — optional but helps with local targeting" type="text" autocomplete="address-level2"/>
           </div>`;
         break;
 
@@ -1240,6 +1245,7 @@
           name: document.getElementById('inp-name')?.value.trim(),
           email: document.getElementById('inp-email')?.value.trim(),
           phone: document.getElementById('inp-phone')?.value.trim(),
+          location: document.getElementById('inp-location')?.value.trim(),
         };
       case 'platforms': {
         const platforms = {};
@@ -1368,7 +1374,7 @@
     showScreen('submitting');
 
     try {
-      await fetch(API_ENDPOINT, {
+      const response = await fetch(API_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1376,16 +1382,26 @@
           hasDemo,
           clientEmail,
           path,
+          tier: urlTier || 'tier1_monthly',
           submittedAt: new Date().toISOString(),
         })
       });
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        console.error('Intake submission error:', err);
+      } else {
+        console.log('Intake submitted successfully');
+      }
     } catch(e) {
-      console.log('API not connected yet — form data:', answers);
+      console.error('Intake fetch error:', e);
     }
 
     // Clear demo localStorage
     localStorage.removeItem('cc_demo_complete');
+    localStorage.removeItem('cc_email');
 
+    // Show done screen regardless — email is already on its way
     setTimeout(() => showScreen('done'), 2000);
   }
 

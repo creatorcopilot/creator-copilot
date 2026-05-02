@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Creator Copilot — Generating Your Pitch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --black: #06060F;
+    --white: #F4F4EF;
+    --red: #FF2424;
+    --gray: #0E0E1C;
+    --gray-mid: #1A1A2E;
+    --gray-light: #6666AA;
+    --green: #00CC66;
+  }
+  body {
+    background: var(--black);
+    color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+  }
+  .logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    letter-spacing: 3px;
+    color: var(--white);
+    margin-bottom: 48px;
+  }
+  .logo span { color: var(--red); }
+
+  /* ── LOADING STATE ── */
+  #state-loading { text-align: center; display: flex; flex-direction: column; align-items: center; }
+  .orb {
+    position: relative;
+    width: 80px; height: 80px;
+    margin: 0 auto 28px;
+  }
+  .ring {
+    position: absolute; inset: 0; border-radius: 50%;
+    border: 2px solid transparent;
+  }
+  .ring-1 { border-top-color: var(--red); animation: spin 1.2s linear infinite; }
+  .ring-2 { inset: 12px; border-right-color: rgba(255,36,36,0.4); animation: spin 1.8s linear infinite reverse; }
+  .orb-center {
+    position: absolute; inset: 26px; border-radius: 50%;
+    background: rgba(255,36,36,0.08);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Bebas Neue', sans-serif; font-size: 12px; color: var(--red);
+  }
+  .loading-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px; letter-spacing: 2px; margin-bottom: 8px;
+  }
+  .loading-sub {
+    font-size: 13px; font-weight: 300; color: var(--gray-light); line-height: 1.7;
+  }
+
+  /* ── PITCH STATE ── */
+  #state-pitch { display: none; max-width: 560px; width: 100%; }
+  .pitch-header {
+    font-family: 'DM Mono', monospace; font-size: 10px;
+    letter-spacing: 3px; color: var(--red); text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .pitch-brand {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 36px; letter-spacing: 2px; margin-bottom: 28px;
+  }
+  .pitch-card {
+    background: var(--gray); border: 1px solid rgba(255,255,255,0.08);
+    border-left: 4px solid var(--red); padding: 20px 24px; margin-bottom: 16px;
+  }
+  .pitch-card-label {
+    font-family: 'DM Mono', monospace; font-size: 10px;
+    letter-spacing: 2px; color: var(--red); text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .pitch-card-content {
+    font-size: 14px; font-weight: 300; color: rgba(244,244,239,0.85);
+    line-height: 1.8; white-space: pre-wrap;
+  }
+  .followup-item {
+    padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
+    font-size: 13px; font-weight: 300; color: var(--gray-light); line-height: 1.6;
+  }
+  .followup-item:last-child { border-bottom: none; }
+  .followup-day {
+    font-family: 'DM Mono', monospace; font-size: 9px;
+    letter-spacing: 2px; color: var(--red); text-transform: uppercase;
+    margin-bottom: 3px;
+  }
+  .btn-copy {
+    display: block; width: 100%; background: var(--red); color: var(--white);
+    font-family: 'DM Sans', sans-serif; font-weight: 700; font-size: 15px;
+    padding: 18px; border: none; cursor: pointer; margin-top: 24px;
+    transition: all 0.2s; text-align: center;
+  }
+  .btn-copy:hover { background: #CC1A1A; transform: translateY(-1px); }
+  .btn-copy.copied { background: var(--green); }
+  .pitch-note {
+    font-family: 'DM Mono', monospace; font-size: 10px;
+    letter-spacing: 1px; color: rgba(100,100,150,0.5);
+    text-align: center; margin-top: 12px; text-transform: uppercase;
+  }
+
+  /* ── ERROR STATE ── */
+  #state-error { text-align: center; display: none; }
+  .error-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px; margin-bottom: 12px;
+  }
+  .error-body {
+    font-size: 14px; font-weight: 300; color: var(--gray-light);
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+
+<div class="logo">CREATOR<span>COPILOT</span></div>
+
+<!-- Loading -->
+<div id="state-loading">
+  <div class="orb">
+    <div class="ring ring-1"></div>
+    <div class="ring ring-2"></div>
+    <div class="orb-center">CC</div>
+  </div>
+  <div class="loading-title">WRITING YOUR PITCH</div>
+  <p class="loading-sub">Building your custom pitch email using Blake's framework.<br>This takes about 10 seconds.</p>
+</div>
+
+<!-- Pitch result -->
+<div id="state-pitch">
+  <div class="pitch-header">Your pitch is ready</div>
+  <div class="pitch-brand" id="pitch-brand-name"></div>
+
+  <div class="pitch-card" id="pitch-contact" style="display:none;border-left-color:#00CC66;"></div>
+
+  <div class="pitch-card">
+    <div class="pitch-card-label">Subject Line</div>
+    <div class="pitch-card-content" id="pitch-subject"></div>
+  </div>
+
+  <div class="pitch-card">
+    <div class="pitch-card-label">Email Body — Copy this and send it</div>
+    <div class="pitch-card-content" id="pitch-body"></div>
+  </div>
+
+  <div class="pitch-card">
+    <div class="pitch-card-label">Follow-Up Schedule</div>
+    <div id="pitch-followups"></div>
+  </div>
+
+  <button class="btn-copy" id="copy-btn" onclick="copyPitch()">Copy Email → Paste and Send</button>
+  <p class="pitch-note">Set a reminder to follow up. Most deals close on follow-up 2 or 3.</p>
+</div>
+
+<!-- Error -->
+<div id="state-error">
+  <div class="error-title">Something went wrong.</div>
+  <p class="error-body">Please go back to your email and try again.</p>
+</div>
+
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const clientEmail = params.get('email') || '';
+  const brandName = params.get('brand') || '';
+  const pitchAngle = params.get('angle') || '';
+
+  let pitchData = null;
+
+  async function generatePitch() {
+    if (!clientEmail || !brandName) {
+      showError();
+      return;
+    }
+
+    try {
+      const response = await fetch('/.netlify/functions/pitch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          clientEmail,
+          brandName,
+          brandData: { pitchAngle }
+        })
+      });
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        console.error('Pitch error:', err);
+
+        if (err.error === 'weekly_limit') {
+          showWeeklyLimit(err);
+        } else if (err.error === 'brand_cooldown') {
+          showBrandCooldown(err);
+        } else {
+          showError();
+        }
+        return;
+      }
+
+      const data = await response.json();
+      pitchData = data.pitch;
+      showPitch(pitchData, brandName);
+
+    } catch(e) {
+      console.error('Fetch error:', e);
+      showError();
+    }
+  }
+
+  function showPitch(pitch, brand) {
+    document.getElementById('state-loading').style.display = 'none';
+    document.getElementById('state-pitch').style.display = 'block';
+    document.getElementById('state-pitch').style.animation = 'fadeUp 0.5s both';
+
+    document.getElementById('pitch-brand-name').textContent = brand;
+    document.getElementById('pitch-subject').textContent = pitch.subject || '';
+    document.getElementById('pitch-body').textContent = pitch.body || '';
+
+    // Show contact email
+    const contactEmail = pitch.contactEmail || '';
+    const confidence = pitch.contactConfidence || 'estimated';
+    const contactEl = document.getElementById('pitch-contact');
+    if (contactEl) contactEl.style.display = 'block';
+    if (contactEl && contactEmail) {
+      contactEl.innerHTML = `
+        <div class="pitch-card-label">Send To</div>
+        <div style="font-size:16px;font-weight:700;color:#F4F4EF;margin-bottom:4px;">${contactEmail}</div>
+        <div style="font-size:11px;color:${confidence === 'verified' ? '#00CC66' : '#6666AA'};">
+          ${confidence === 'verified' ? '✓ Verified contact' : '⚠ Estimated — verify before sending'}
+        </div>
+      `;
+      contactEl.style.borderLeftColor = confidence === 'verified' ? '#00CC66' : '#FF2424';
+    }
+
+    const followupsEl = document.getElementById('pitch-followups');
+    const followups = [
+      { day: 'Day 3-4', text: pitch.followUp1 },
+      { day: 'Day 8-11', text: pitch.followUp2 },
+      { day: 'Day 18-21', text: pitch.followUp3 },
+      { day: 'Day 45-60 — Circle Back', text: pitch.circleBack },
+    ];
+
+    followupsEl.innerHTML = followups.filter(f => f.text).map(f => `
+      <div class="followup-item">
+        <div class="followup-day">${f.day}</div>
+        <div>${f.text}</div>
+      </div>
+    `).join('');
+  }
+
+  function showError() {
+    document.getElementById('state-loading').style.display = 'none';
+    document.getElementById('state-error').style.display = 'block';
+  }
+
+  function showWeeklyLimit(data) {
+    document.getElementById('state-loading').style.display = 'none';
+    const errEl = document.getElementById('state-error');
+    errEl.style.display = 'block';
+    errEl.innerHTML = `
+      <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;color:#FF2424;text-transform:uppercase;margin-bottom:12px;">One Pitch Per Week</div>
+      <div class="error-title" style="font-size:22px;">You already pitched ${data.pitchedBrand || 'a brand'} this week.</div>
+      <p class="error-body" style="margin-top:12px;line-height:1.7;">Blake's rule — one pitch per week done right beats five rushed ones. Brands respect creators who approach them thoughtfully.<br><br><strong style="color:#F4F4EF;">Your next pitch unlocks in ${data.daysUntil || '?'} day${data.daysUntil === 1 ? '' : 's'}.</strong></p>
+    `;
+  }
+
+  function showBrandCooldown(data) {
+    document.getElementById('state-loading').style.display = 'none';
+    const errEl = document.getElementById('state-error');
+    errEl.style.display = 'block';
+    errEl.innerHTML = `
+      <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;color:#FF2424;text-transform:uppercase;margin-bottom:12px;">90-Day Cooldown</div>
+      <div class="error-title" style="font-size:22px;">${data.message || 'You pitched this brand recently.'}</div>
+      <p class="error-body" style="margin-top:12px;">A fresh angle after 90 days is far more effective than pitching twice in a row. We'll add them back to your Top 10 when the window opens.</p>
+    `;
+  }
+
+  function copyPitch() {
+    if (!pitchData) return;
+    const text = `Subject: ${pitchData.subject}\n\n${pitchData.body}`;
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.getElementById('copy-btn');
+      btn.textContent = '✓ Copied — Now paste it into your email';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.textContent = 'Copy Email → Paste and Send';
+        btn.classList.remove('copied');
+      }, 3000);
+    });
+  }
+
+  // Start generating immediately on page load
+  generatePitch();
+</script>
+</body>
+</html>
