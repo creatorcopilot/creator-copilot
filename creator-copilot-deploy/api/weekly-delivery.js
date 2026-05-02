@@ -11,7 +11,7 @@ const HEADERS = { 'Content-Type': 'application/json' };
 
 exports.handler = async function(event, context) {
   try {
-    const { data: clients } = await supabase.from('clients').select('*').eq('status', 'active').in('tier', ['tier1_monthly','tier1_annual','tier2_monthly','tier2_annual']);
+    const { data: clients } = await supabase.from('clients').select('*, location, goal, targeting').eq('status', 'active').in('tier', ['tier1_monthly','tier1_annual','tier2_monthly','tier2_annual']);
 
     const results = [];
     for (const client of clients) {
@@ -25,7 +25,22 @@ Name: ${client.name}, Niche: ${client.niche}, Style: ${client.content_style}
 Fingerprint: ${client.content_fingerprint}
 Micro audience: ${client.micro_audience}
 Off limits: ${client.off_limits || 'None'}
-Return JSON: { scripts: array of 6 with title/hook/script/cta/tiktok_note/instagram_note/caption${isTier2 ? ', brandReport: { weeklyMarketRead, topBrands, pitchEmails }' : ''} }`;
+Location: ${client.location || 'Not specified'}
+Client targeting scope: ${client.targeting || 'anywhere'}
+Local mode: ${client.targeting === 'local' ? 'YES — geo-target every script, caption, and posting instruction for ' + (client.location || 'their local area') : client.targeting === 'both' ? 'MIXED — some scripts local, some broad' : 'NO — broad audience targeting'}
+Return JSON: { scripts: array of 7 }
+
+CRITICAL — DYNAMIC FORMAT RULES:
+- Generate 7 scripts (one per day Monday through Sunday)
+- Do NOT use fixed slot labels like "Reel 1 Value" or "Reel 2 Social Proof"
+- Instead: run the research engine first, find what content formats are ACTUALLY PERFORMING in this niche RIGHT NOW
+- Then build each script around what the data says works — could be pain point, storytime, hot take, direct offer, POV, day in the life, three mistakes, myth bust, anything
+- Each script title should describe what it actually is and WHY based on research: e.g. "Pain Point — comments in this niche are full of this frustration right now"
+- One script per day. Mix the formats so the week feels varied not repetitive
+- Script 7 (Sunday) is always high pattern-interrupt — designed to spread, not convert
+- SCRIPT FORMAT: Reel 1 (day 1) can be longer 30-45 sec personal story. All others 15-17 seconds max.
+- NEVER fabricate personal stories. Use [brackets] to prompt their real one.
+- Include: title (format + why this week), hook, structure, cta, tiktok_note, instagram_note, caption${isTier2 ? ', brandReport: { weeklyMarketRead, topBrands, pitchEmails }' : ''} }`;
 
         const response = await anthropic.messages.create({
           model: 'claude-sonnet-4-6',
@@ -39,20 +54,19 @@ Return JSON: { scripts: array of 6 with title/hook/script/cta/tiktok_note/instag
         await supabase.from('deliveries').insert({ client_id: client.id, client_email: client.email, week_number: weekNumber, scripts: output.scripts, brand_report: output.brandReport || null, delivered_at: new Date().toISOString() });
         await supabase.from('clients').update({ delivery_count: weekNumber, last_delivery: new Date().toISOString() }).eq('id', client.id);
 
+        // Monday email — brand deals only. Scripts delivered via daily text.
         await resend.emails.send({
           from: process.env.FROM_EMAIL,
           to: client.email,
-          subject: `Week ${weekNumber} is ready — ${firstName}, let's go`,
+          subject: `Week ${weekNumber} — your scripts start tomorrow morning, ${firstName}`,
           html: `<div style="font-family:Arial;background:#06060F;color:#F4F4EF;padding:40px 24px;max-width:600px;margin:0 auto">
-            <h1 style="color:#F4F4EF">Week ${weekNumber} is ready.</h1>
-            <p style="color:#8888AA">Hey ${firstName} — film these five scripts this week and post them. That is your entire job.</p>
-            ${output.scripts.map((s,i) => `<div style="background:#0E0E1C;border-left:4px solid #FF2424;padding:20px;margin:16px 0">
-              <div style="color:#FF2424;font-size:11px;letter-spacing:2px">Script ${i+1} — ${s.title}</div>
-              <div style="font-size:18px;font-weight:700;color:#FF2424;margin:8px 0">"${s.hook}"</div>
-              <div style="color:#AAAACC;white-space:pre-wrap">${s.script}</div>
-              <div style="color:#444466;font-size:12px;margin-top:8px">TikTok: ${s.tiktok_note}<br>Instagram: ${s.instagram_note}</div>
-              <div style="background:#1A1A2E;padding:10px;margin-top:8px;font-size:12px;color:#6666AA">${s.caption}</div>
-            </div>`).join('')}
+            <div style="font-family:monospace;font-size:10px;letter-spacing:3px;color:#FF2424;text-transform:uppercase;margin-bottom:8px;">Week ${weekNumber}</div>
+            <h1 style="font-size:28px;font-weight:900;margin-bottom:16px;color:#F4F4EF;">Your scripts are coming.<br>Check your phone.</h1>
+            <p style="color:#8888AA;font-size:14px;line-height:1.7;margin-bottom:24px;">Hey ${firstName} — 7 scripts are hitting your phone this week, one every morning at 9am. Read it. Film it. Post it. That is your entire job.</p>
+            <div style="background:#0E0E1C;border-left:4px solid rgba(255,36,36,0.3);padding:16px 20px;margin-bottom:28px;">
+              <div style="font-family:monospace;font-size:10px;letter-spacing:2px;color:#6666AA;text-transform:uppercase;margin-bottom:4px;">This week</div>
+              <div style="font-size:13px;color:#8888AA;line-height:1.7;">Mon–Sun · 9am daily · One script per text · Caption included · Post settings included</div>
+            </div>
             <p style="color:#FF2424;font-weight:700">You create. We make you unstoppable.</p>
           </div>`
         });

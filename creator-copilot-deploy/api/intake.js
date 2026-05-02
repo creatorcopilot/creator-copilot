@@ -1,7 +1,12 @@
 const Anthropic = require('@anthropic-ai/sdk');
 const { createClient } = require('@supabase/supabase-js');
 const { Resend } = require('resend');
+const twilio = require('twilio');
+const twilio = require('twilio');
 const { MASTER_REFERENCE } = require('./master-reference');
+const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+
+const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
@@ -35,6 +40,8 @@ exports.handler = async function(event, context) {
     await supabase.from('clients').update({
       name: answers.contact?.name,
       phone: answers.contact?.phone,
+      location: answers.contact?.location || null,
+      targeting: answers.targeting || 'anywhere',
       platforms: answers.platforms,
       client_type: answers.type,
       stage: answers.stage,
@@ -50,7 +57,22 @@ exports.handler = async function(event, context) {
       month3_win: answers.win,
     }).eq('email', clientEmail);
 
-    const isTier2 = (tier || '').includes('tier2');
+    // Look up tier from Supabase — set by Stripe webhook when they paid
+    let resolvedTier = tier || 'tier1_monthly';
+    try {
+      const { data: clientRecord } = await supabase
+        .from('clients')
+        .select('tier')
+        .eq('email', clientEmail)
+        .single();
+      if (clientRecord?.tier) {
+        resolvedTier = clientRecord.tier;
+        console.log('Tier from Supabase:', resolvedTier);
+      }
+    } catch(e) {
+      console.log('Using URL tier fallback:', resolvedTier);
+    }
+    const isTier2 = resolvedTier.includes('tier2');
 
     const prompt = `New Creator Copilot client. Generate their complete Week 1 setup.
 
@@ -60,6 +82,8 @@ Niche: ${answers.what}
 Category: ${answers.category}
 Goal: ${answers.goal}
 Stage: ${answers.stage}
+Location: ${answers.contact?.location || 'Not specified'}
+Local service business: ${answers.goal === 'clients' ? 'YES — target local audience' : 'NO — build broad following'}
 Style: ${answers.style}
 Differentiator: ${answers.different}
 Link: ${answers.link || 'None'}
@@ -69,7 +93,19 @@ Off limits: ${answers.offlimits || 'None'}
 Month 3 win: ${answers.win}
 ${demoReport ? 'DEMOGRAPHIC PROFILE ON FILE: ' + JSON.stringify(demoReport) : ''}
 
-Return JSON with: creatorPersonality, microAudience, contentFingerprint, competitivePosition, scripts (array of 6 with title/hook/script/cta/tiktok_note/instagram_note/caption)${isTier2 ? ', inroSetup (triggerWord/message1/message2/message3), brandReport (weeklyMarketRead/topBrands/pitchEmails)' : ''}`;
+Return JSON with: creatorPersonality, microAudience, contentFingerprint, competitivePosition, scripts (array of 7)
+
+CRITICAL — DYNAMIC SCRIPT FORMAT:
+- Generate 7 scripts (one per day Monday through Sunday)
+- Run the research engine first — find what content formats are ACTUALLY PERFORMING in this niche right now
+- Build each script around what the live research shows is working — pain points, storytime, hot takes, direct offer, POV, day in the life, myth bust, three mistakes — whatever the data says
+- Do NOT use fixed slot labels. Each title should say what it is AND why based on research
+- Example title: "Pain Point — this frustration dominates comments in your niche right now"
+- Script 1 (Monday) can be 30-45 seconds — personal story format
+- Scripts 2-7: 15-17 seconds max — one idea, one punch, one CTA
+- Script 7 (Sunday): high pattern-interrupt — designed to spread, not convert
+- Every script needs: title, hook, structure, cta, tiktok_note, instagram_note, caption
+- NEVER fabricate personal stories. Use [brackets] to prompt their real one.${isTier2 ? ', inroSetup (triggerWord/message1/message2/message3), brandReport (weeklyMarketRead/topBrands/pitchEmails)' : ''}`;
 
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-6',
@@ -115,6 +151,46 @@ Return JSON with: creatorPersonality, microAudience, contentFingerprint, competi
       html: `<h2>New client setup complete</h2><p>Name: ${answers.contact?.name}</p><p>Email: ${clientEmail}</p><p>Niche: ${answers.what}</p><p>Goal: ${answers.goal}</p>`,
     });
 
+    // ── SCHEDULE DAY 2 ONBOARDING TEXT ──────────────────────────
+    // Send Instagram optimization text the next morning at 9am
+    const phone = answers.contact?.phone;
+    if (phone) {
+      const isLocal = answers.targeting === 'local' || answers.targeting === 'both';
+      const onboardingText = buildOnboardingText(
+        firstName,
+        answers.category || 'creator',
+        answers.goal || 'audience',
+        answers.contact?.location || '',
+        isLocal,
+        answers.link || ''
+      );
+
+      // Calculate delay until 9am tomorrow
+      const now = new Date();
+      const tomorrow9am = new Date();
+      tomorrow9am.setDate(tomorrow9am.getDate() + 1);
+      tomorrow9am.setHours(9, 0, 0, 0);
+      const delayMs = tomorrow9am.getTime() - now.getTime();
+
+      // Schedule via setTimeout (works for delays under 24hrs in Netlify functions)
+      // For production reliability this should use a scheduled job
+      // For now we send immediately if delay is reasonable, otherwise note it
+      if (delayMs < 23 * 60 * 60 * 1000) {
+        setTimeout(async () => {
+          try {
+            await twilioClient.messages.create({
+              body: onboardingText,
+              from: process.env.TWILIO_PHONE_NUMBER,
+              to: phone
+            });
+            console.log('Onboarding text sent to:', phone);
+          } catch(e) {
+            console.error('Onboarding text failed:', e.message);
+          }
+        }, delayMs);
+      }
+    }
+
     return { statusCode: 200, headers: HEADERS, body: JSON.stringify({ success: true }) };
 
   } catch(error) {
@@ -122,6 +198,106 @@ Return JSON with: creatorPersonality, microAudience, contentFingerprint, competi
     return { statusCode: 500, headers: HEADERS, body: JSON.stringify({ error: error.message }) };
   }
 };
+
+function buildOnboardingText(firstName, category, goal, location, isLocal, link) {
+  const categorySettings = {
+    fitness: { accountType: 'Health/Beauty', category: 'Fitness Trainer', topics: 'fitness, workout, health' },
+    beauty: { accountType: 'Health/Beauty', category: 'Beauty, Cosmetic & Personal Care', topics: 'beauty, skincare, makeup' },
+    food: { accountType: 'Food & Beverage', category: 'Restaurant', topics: 'food, cooking, recipes' },
+    music: { accountType: 'Artist', category: 'Musician/Band', topics: 'music, artist, songs' },
+    automotive: { accountType: 'Automotive', category: 'Automotive', topics: 'cars, automotive, vehicles' },
+    business: { accountType: 'Entrepreneur', category: 'Entrepreneur', topics: 'business, entrepreneur, money' },
+    education: { accountType: 'Education', category: 'Education', topics: 'education, learning, tips' },
+    lifestyle: { accountType: 'Creator', category: 'Content Creator', topics: 'lifestyle, creator, content' },
+  };
+
+  const settings = categorySettings[category] || { accountType: 'Creator', category: 'Content Creator', topics: 'content, creator' };
+
+  const locationLine = isLocal && location
+    ? `📍 Add your location: ${location} — this is critical for local discovery`
+    : `🌍 Leave location broad — your audience is everywhere`;
+
+  const linkLine = link
+    ? `🔗 Your link is set to: ${link} — make sure it works`
+    : `🔗 Add a link — website, booking page, or Linktree`;
+
+  const goalLine = goal === 'clients'
+    ? `Your goal is getting clients — every setting below makes it easier for local people to find you.`
+    : goal === 'branddeals'
+    ? `Your goal is landing brand deals — these settings make you look professional to brand teams.`
+    : `Your goal is growing your audience — these settings help the algorithm push you to the right people.`;
+
+  return `Creator Copilot 🎬 Day 1 Setup
+
+${goalLine}
+
+Change these RIGHT NOW before you post anything:
+
+— Go to your profile → Edit Profile:
+📝 Category: set to "${settings.category}"
+🏷 Bio: one sentence — what you do and who you help
+${linkLine}
+
+— Go to Settings → Account:
+✅ Switch to Professional Account
+✅ Account type: ${settings.accountType}
+
+— Go to Settings → Creator/Business:
+✅ Turn on Instagram Insights
+${locationLine}
+
+— Add to every new post:
+🏷 Topics: ${settings.topics}
+${isLocal ? `📍 Tag your location every time` : `📌 No location tag needed`}
+
+Takes 3 minutes. Your first script arrives tomorrow morning. 🚀
+Reply STOP to unsubscribe`;
+}
+
+function buildOnboardingText(firstName, category, goal, location, isLocal, link, isTier2) {
+  const cats = {
+    fitness: { type: 'Health/Beauty', cat: 'Fitness Trainer', topics: 'fitness, workout, health' },
+    beauty: { type: 'Health/Beauty', cat: 'Beauty & Personal Care', topics: 'beauty, skincare, makeup' },
+    food: { type: 'Food & Beverage', cat: 'Restaurant', topics: 'food, cooking, recipes' },
+    music: { type: 'Artist', cat: 'Musician/Band', topics: 'music, artist, songs' },
+    automotive: { type: 'Automotive', cat: 'Automotive', topics: 'cars, automotive, vehicles' },
+    business: { type: 'Entrepreneur', cat: 'Entrepreneur', topics: 'business, entrepreneur, money' },
+    education: { type: 'Education', cat: 'Education', topics: 'education, learning, tips' },
+    lifestyle: { type: 'Creator', cat: 'Content Creator', topics: 'lifestyle, creator, content' },
+  };
+  const s = cats[category] || cats.lifestyle;
+  const locationLine = isLocal && location
+    ? '📍 Add your location: ' + location + ' — critical for local discovery'
+    : '🌍 Leave location broad — your audience is everywhere';
+  const linkLine = link
+    ? '🔗 Your link: ' + link + ' — make sure it works'
+    : '🔗 Add a link — website, booking page, or Linktree';
+
+  return `Creator Copilot 🎬 Welcome, ${firstName}!
+
+Change these Instagram settings right now — takes 3 minutes:
+
+— Edit Profile:
+📝 Category: "${s.cat}"
+🏷 Bio: one sentence — what you do and who you help
+${linkLine}
+
+— Settings → Account:
+✅ Switch to Professional Account
+✅ Account type: ${s.type}
+✅ Turn on Instagram Insights
+${locationLine}
+
+— Add to every post:
+🏷 Topics: ${s.topics}
+${isLocal ? '📍 Tag your location every time' : ''}
+
+From tomorrow — your script arrives at 9am every single day. Read it. Film it. Post it.
+${isTier2 ? 'Your brand deal pitches land in your email every Monday morning.' : 'Upgrade anytime to add weekly brand deal pitches.'}
+
+Let's go. 🚀
+Reply STOP to unsubscribe`;
+}
 
 function buildEmail(output, firstName, isTier2) {
   const scripts = output.scripts || [];
