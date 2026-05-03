@@ -824,6 +824,15 @@
   let answers = {};
   let hasDemo = false;
   let clientEmail = '';
+
+  // Read URL params — Stripe passes prefilled_email after payment
+  const _urlParams = new URLSearchParams(window.location.search);
+  const urlEmail = _urlParams.get('prefilled_email') || _urlParams.get('email') || '';
+  const urlTier = _urlParams.get('tier') || '';
+  if (urlEmail) {
+    clientEmail = decodeURIComponent(urlEmail);
+    localStorage.setItem('cc_email', clientEmail);
+  }
   let path = ''; // 'creator' or 'business'
   let totalQuestions = 0;
 
@@ -1132,6 +1141,7 @@
         area.innerHTML = `
           <div style="display:flex;flex-direction:column;gap:10px;">
             <input class="q-input" id="inp-name" placeholder="Full name" type="text" autocomplete="name"/>
+            <input class="q-input" id="inp-business" placeholder="Business or brand name (if different from your name)" type="text"/>
             <input class="q-input" id="inp-email" placeholder="Email address" type="email" autocomplete="email" value="${clientEmail || ''}"/>
             <input class="q-input" id="inp-phone" placeholder="Phone number" type="tel" autocomplete="tel"/>
             <input class="q-input" id="inp-location" placeholder="City, State (e.g. Miami, FL) — optional but helps with local targeting" type="text" autocomplete="address-level2"/>
@@ -1243,6 +1253,7 @@
       case 'contact':
         return {
           name: document.getElementById('inp-name')?.value.trim(),
+          businessName: document.getElementById('inp-business')?.value.trim(),
           email: document.getElementById('inp-email')?.value.trim(),
           phone: document.getElementById('inp-phone')?.value.trim(),
           location: document.getElementById('inp-location')?.value.trim(),
