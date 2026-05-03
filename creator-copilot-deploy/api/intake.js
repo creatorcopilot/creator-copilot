@@ -2,10 +2,7 @@ const Anthropic = require('@anthropic-ai/sdk');
 const { createClient } = require('@supabase/supabase-js');
 const { Resend } = require('resend');
 const twilio = require('twilio');
-const twilio = require('twilio');
 const { MASTER_REFERENCE } = require('./master-reference');
-const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
-
 const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -39,6 +36,7 @@ exports.handler = async function(event, context) {
 
     await supabase.from('clients').update({
       name: answers.contact?.name,
+      business_name: answers.contact?.businessName || answers.contact?.name,
       phone: answers.contact?.phone,
       location: answers.contact?.location || null,
       targeting: answers.targeting || 'anywhere',
@@ -156,6 +154,7 @@ CRITICAL — DYNAMIC SCRIPT FORMAT:
     const phone = answers.contact?.phone;
     if (phone) {
       const isLocal = answers.targeting === 'local' || answers.targeting === 'both';
+      const businessName = answers.contact?.businessName || answers.contact?.name || firstName;
       const onboardingText = buildOnboardingText(
         firstName,
         answers.category || 'creator',
@@ -254,7 +253,8 @@ Takes 3 minutes. Your first script arrives tomorrow morning. 🚀
 Reply STOP to unsubscribe`;
 }
 
-function buildOnboardingText(firstName, category, goal, location, isLocal, link, isTier2) {
+function buildOnboardingText(firstName, category, goal, location, isLocal, link, isTier2, businessName) {
+  businessName = businessName || firstName;
   const cats = {
     fitness: { type: 'Health/Beauty', cat: 'Fitness Trainer', topics: 'fitness, workout, health' },
     beauty: { type: 'Health/Beauty', cat: 'Beauty & Personal Care', topics: 'beauty, skincare, makeup' },
@@ -273,7 +273,7 @@ function buildOnboardingText(firstName, category, goal, location, isLocal, link,
     ? '🔗 Your link: ' + link + ' — make sure it works'
     : '🔗 Add a link — website, booking page, or Linktree';
 
-  return `Creator Copilot 🎬 Welcome, ${firstName}!
+  return `Creator Copilot 🎬 [${businessName}] Welcome, ${firstName}!
 
 Change these Instagram settings right now — takes 3 minutes:
 
