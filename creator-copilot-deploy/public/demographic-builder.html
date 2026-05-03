@@ -485,7 +485,6 @@
   .report-section {
     margin-bottom: 32px;
     border: 1px solid var(--border);
-    overflow: hidden;
   }
 
   .rs-header {
@@ -814,6 +813,176 @@
 
   .q-example-item:hover .q-example-use { opacity: 1; }
 
+
+  /* ── ANNUAL OFFER MODAL ──────────────────────────────────────── */
+  .annual-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.88);
+    z-index: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+    backdrop-filter: blur(8px);
+  }
+
+  .annual-modal-overlay.open {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .annual-modal-box {
+    background: #0E0E1C;
+    border: 1px solid rgba(255,36,36,0.5);
+    max-width: 400px;
+    width: 100%;
+    padding: 36px 28px;
+    transform: translateY(24px) scale(0.97);
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+  }
+
+  .annual-modal-overlay.open .annual-modal-box {
+    transform: translateY(0) scale(1);
+  }
+
+  .annual-modal-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 3px;
+    color: var(--red);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    display: block;
+  }
+
+  .annual-modal-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 32px;
+    line-height: 1.0;
+    letter-spacing: 1px;
+    color: var(--white);
+    margin-bottom: 16px;
+  }
+
+  .annual-modal-title em {
+    color: var(--red);
+    font-style: normal;
+  }
+
+  .annual-modal-body {
+    font-size: 14px;
+    font-weight: 300;
+    color: var(--gray-light);
+    line-height: 1.8;
+    margin-bottom: 24px;
+  }
+
+  .annual-modal-body strong { color: var(--white); font-weight: 600; }
+
+  .annual-modal-prices {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .annual-modal-price {
+    flex: 1;
+    padding: 14px;
+    background: rgba(255,36,36,0.06);
+    border: 1px solid rgba(255,36,36,0.2);
+    text-align: center;
+  }
+
+  .annual-modal-price .amp-tier {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--red);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .annual-modal-price .amp-amount {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    color: var(--white);
+    line-height: 1;
+    margin-bottom: 2px;
+  }
+
+  .annual-modal-price .amp-period {
+    font-size: 11px;
+    color: var(--gray-light);
+  }
+
+  .annual-modal-price .amp-save {
+    font-size: 10px;
+    color: var(--red);
+    margin-top: 4px;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 1px;
+  }
+
+  .btn-annual-t2 {
+    display: block;
+    width: 100%;
+    background: var(--red);
+    color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    padding: 16px;
+    text-align: center;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    margin-bottom: 10px;
+    transition: all 0.2s;
+  }
+
+  .btn-annual-t2:hover { background: #CC1A1A; transform: translateY(-1px); }
+
+  .btn-annual-t1 {
+    display: block;
+    width: 100%;
+    background: transparent;
+    color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    padding: 13px;
+    text-align: center;
+    border: 1px solid rgba(255,255,255,0.15);
+    cursor: pointer;
+    text-decoration: none;
+    margin-bottom: 10px;
+    transition: all 0.2s;
+  }
+
+  .btn-annual-t1:hover { border-color: rgba(255,255,255,0.4); }
+
+  .btn-annual-skip {
+    display: block;
+    width: 100%;
+    background: transparent;
+    color: rgba(255,255,255,0.25);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 400;
+    font-size: 11px;
+    padding: 10px;
+    text-align: center;
+    border: none;
+    cursor: pointer;
+    transition: color 0.2s;
+  }
+
+  .btn-annual-skip:hover { color: rgba(255,255,255,0.5); }
+
 </style>
 </head>
 <body>
@@ -940,20 +1109,19 @@
       Every script <strong>engineered for your specific audience.</strong> Designed to stop their scroll, keep them watching, and drive them to act. One script texted to your phone every single morning. Done for you.
     </p>
 
-    <!-- Billing toggle -->
-    <div style="display:flex;align-items:center;justify-content:center;gap:14px;margin:0 0 24px;">
-      <span id="ug-monthly-label" style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--white);text-transform:uppercase;cursor:pointer;" onclick="ugSetBilling('monthly')">Monthly</span>
-      <div id="ug-toggle" onclick="ugToggle()" style="width:44px;height:24px;background:var(--gray-mid);border:1px solid rgba(255,255,255,0.1);border-radius:12px;position:relative;cursor:pointer;transition:background 0.3s;flex-shrink:0;">
-        <div id="ug-thumb" style="position:absolute;top:3px;left:3px;width:16px;height:16px;background:white;border-radius:50%;transition:transform 0.3s;"></div>
+    <!-- Annual offer trigger -->
+    <div style="margin:0 0 20px;padding:12px 16px;background:rgba(255,36,36,0.06);border:1px solid rgba(255,36,36,0.2);display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="showAnnualModalForTier(0)">
+      <div>
+        <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--red);text-transform:uppercase;margin-bottom:2px;">Special offer</div>
+        <div style="font-size:13px;font-weight:600;color:var(--white);">Get 2 months free with annual →</div>
       </div>
-      <span id="ug-annual-label" style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--gray-light);text-transform:uppercase;cursor:pointer;" onclick="ugSetBilling('annual')">Annual</span>
-      <span id="ug-save-badge" style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:1px;color:var(--red);border:1px solid rgba(255,36,36,0.3);padding:3px 8px;opacity:0;transition:opacity 0.3s;">Save 2 months</span>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--red);">→</div>
     </div>
 
     <div class="upgrade-cards">
 
       <!-- Tier 2 — All Inclusive -->
-      <a id="ug-t2-btn" href="https://buy.stripe.com/8x2fZh71t4M78cq8EJ1Jm02" class="upgrade-card featured">
+      <a id="ug-t2-btn" href="#" onclick="event.preventDefault();showAnnualModalForTier(2)" class="upgrade-card featured">
         <div class="uc-tag">Most Popular</div>
         <div class="uc-tier">Tier 2 — All Inclusive</div>
         <div class="uc-name">Content + Brand Deals</div>
@@ -963,7 +1131,7 @@
       </a>
 
       <!-- Tier 1 — Content -->
-      <a id="ug-t1-btn" href="https://buy.stripe.com/14A4gzclNdiD2S6f371Jm00" class="upgrade-card">
+      <a id="ug-t1-btn" href="#" onclick="event.preventDefault();showDemoUpsellModal()" class="upgrade-card">
         <div class="uc-tier">Tier 1 — Content</div>
         <div class="uc-name">Scripts Only</div>
         <div class="uc-price" id="ug-t1-price">$149<span>/month</span></div>
@@ -976,35 +1144,7 @@
     <button class="upgrade-skip" onclick="window.location='/'">No thanks, I'll figure it out myself</button>
   </div>
 
-  <script>
-    // Upgrade section billing toggle
-    var ugBilling = 'monthly';
-    var ugPrices = {
-      monthly: { t1: '$149', t1sub: '/month', t1note: false, t1link: 'https://buy.stripe.com/14A4gzclNdiD2S6f371Jm00', t2: '$297', t2sub: '/month', t2note: false, t2link: 'https://buy.stripe.com/8x2fZh71t4M78cq8EJ1Jm02' },
-      annual:  { t1: '$1,490', t1sub: '/year', t1note: true, t1link: 'https://buy.stripe.com/4gM4gzadF5QbboC8EJ1Jm01', t2: '$2,970', t2sub: '/year', t2note: true, t2link: 'https://buy.stripe.com/4gM28rgC32DZcsG5sx1Jm03' }
-    };
 
-    function ugToggle() { ugSetBilling(ugBilling === 'monthly' ? 'annual' : 'monthly'); }
-
-    function ugSetBilling(mode) {
-      ugBilling = mode;
-      var p = ugPrices[mode];
-      var isAnnual = mode === 'annual';
-
-      document.getElementById('ug-toggle').style.background = isAnnual ? 'var(--red)' : 'var(--gray-mid)';
-      document.getElementById('ug-thumb').style.transform = isAnnual ? 'translateX(20px)' : 'translateX(0)';
-      document.getElementById('ug-monthly-label').style.color = isAnnual ? 'var(--gray-light)' : 'var(--white)';
-      document.getElementById('ug-annual-label').style.color = isAnnual ? 'var(--white)' : 'var(--gray-light)';
-      document.getElementById('ug-save-badge').style.opacity = isAnnual ? '1' : '0';
-
-      document.getElementById('ug-t1-price').innerHTML = p.t1 + '<span>' + p.t1sub + '</span>';
-      document.getElementById('ug-t2-price').innerHTML = p.t2 + '<span>' + p.t2sub + '</span>';
-      document.getElementById('ug-t1-annual-note').style.display = p.t1note ? 'block' : 'none';
-      document.getElementById('ug-t2-annual-note').style.display = p.t2note ? 'block' : 'none';
-      document.getElementById('ug-t1-btn').href = p.t1link;
-      document.getElementById('ug-t2-btn').href = p.t2link;
-    }
-  </script>
 </div>
 
 <script>
@@ -1477,7 +1617,7 @@ Return ONLY the JSON object. No extra text.`;
               <span class="rs-icon">${sec.icon}</span>
               <span class="rs-label">${sec.label}</span>
             </div>
-            <div class="rs-content">
+            <div class="rs-content" style="padding-top:0;">
               ${angles.map((angle, ai) => `
                 <div style="padding:16px 0;border-bottom:1px solid rgba(255,255,255,0.06);">
                   <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--red);text-transform:uppercase;margin-bottom:6px;">Angle ${ai + 1}</div>
@@ -1564,5 +1704,139 @@ Return ONLY the JSON object. No extra text.`;
   }
 
 </script>
+
+<!-- ── ANNUAL OFFER MODAL ── -->
+<div class="annual-modal-overlay" id="annual-modal">
+  <div class="annual-modal-box">
+    <span class="annual-modal-tag">Limited time — Two months free</span>
+    <h3 class="annual-modal-title">IMAGINE NEVER WORRYING ABOUT<br>CONTENT FOR A <em>WHOLE YEAR.</em></h3>
+    <p class="annual-modal-body">
+      Lock in your annual plan today and get <strong>two months completely free.</strong> Your audience profile is built. Your scripts are ready to start. The only question is how long you want the system running for you.
+    </p>
+    <div class="annual-modal-prices">
+      <div class="annual-modal-price">
+        <div class="amp-tier">Content</div>
+        <div class="amp-amount">$1,490</div>
+        <div class="amp-period">per year</div>
+        <div class="amp-save">Save $298</div>
+      </div>
+      <div class="annual-modal-price">
+        <div class="amp-tier">All Inclusive</div>
+        <div class="amp-amount">$2,970</div>
+        <div class="amp-period">per year</div>
+        <div class="amp-save">Save $594</div>
+      </div>
+    </div>
+    <a href="https://buy.stripe.com/4gM28rgC32DZcsG5sx1Jm03" class="btn-annual-t2">Get All Inclusive Annual — $2,970/yr</a>
+    <a href="https://buy.stripe.com/4gM4gzadF5QbboC8EJ1Jm01" class="btn-annual-t1">Content Only Annual — $1,490/yr</a>
+    <button class="btn-annual-skip" id="annual-skip-btn" onclick="goMonthly()">No thanks — I'll pay monthly</button>
+  </div>
+</div>
+
+<script>
+  function openAnnualModal() {
+    document.getElementById('annual-modal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeAnnualModal() {
+    document.getElementById('annual-modal').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  function goMonthly() {
+    closeAnnualModal();
+    // Send them to the monthly link for whichever tier they selected
+    var t2Monthly = 'https://buy.stripe.com/8x2fZh71t4M78cq8EJ1Jm02';
+    var t1Monthly = 'https://buy.stripe.com/14A4gzclNdiD2S6f371Jm00';
+    window.location.href = selectedTier === 2 ? t2Monthly : t1Monthly;
+  }
+
+  function closeAnnualModal() {
+    document.getElementById('annual-modal').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  // Close on overlay click
+  document.getElementById('annual-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeAnnualModal();
+  });
+</script>
+
+
+<!-- ── DEMO UPSELL MODAL — fires when Tier 1 clicked ── -->
+<div class="annual-modal-overlay" id="demo-upsell-modal">
+  <div class="annual-modal-box">
+    <span class="annual-modal-tag">Hold on a second</span>
+    <h3 class="annual-modal-title">ARE YOU SURE YOU DON'T WANT THE <em>FULL PACKAGE?</em></h3>
+    <p class="annual-modal-body">
+      Scripts alone are powerful. But you'd be leaving two things on the table every single week:
+      <br><br>
+      <strong>→</strong> Instagram captures your leads automatically 24/7<br>
+      <strong>→</strong> Weekly brand deal pitch ready to send in one tap<br>
+      <strong>→</strong> Monthly niche intelligence report<br>
+      <br>
+      The difference? Just <strong style="color:var(--red);">$148/month more.</strong> One brand deal covers months.
+    </p>
+    <button class="btn-annual-t2" onclick="showAnnualModalForTier(2)">Yes — I want All Inclusive</button>
+    <button class="btn-annual-t1" onclick="showAnnualModalForTier(1)">No thanks — Content Only</button>
+    <button class="btn-annual-skip" onclick="closeDemoUpsellModal()">← Go back</button>
+  </div>
+</div>
+
+<script>
+  var selectedTier = 1;
+
+  function showDemoUpsellModal() {
+    document.getElementById('demo-upsell-modal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeDemoUpsellModal() {
+    document.getElementById('demo-upsell-modal').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  function showAnnualModalForTier(tier) {
+    selectedTier = tier;
+    // Close upsell modal if open
+    document.getElementById('demo-upsell-modal').classList.remove('open');
+    // Open annual modal
+    document.getElementById('annual-modal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+
+    // Update annual modal buttons based on tier selection
+    var t2Annual = 'https://buy.stripe.com/4gM28rgC32DZcsG5sx1Jm03';
+    var t1Annual = 'https://buy.stripe.com/4gM4gzadF5QbboC8EJ1Jm01';
+    var t2Monthly = 'https://buy.stripe.com/8x2fZh71t4M78cq8EJ1Jm02';
+    var t1Monthly = 'https://buy.stripe.com/14A4gzclNdiD2S6f371Jm00';
+
+    if (tier === 2) {
+      // They want Tier 2 — show annual vs monthly for Tier 2
+      document.querySelector('.btn-annual-t2').href = t2Annual;
+      document.querySelector('.btn-annual-t2').textContent = 'Yes — All Inclusive Annual ($2,970/yr)';
+      document.querySelector('.btn-annual-t1').href = t2Monthly;
+      document.querySelector('.btn-annual-t1').textContent = 'No thanks — All Inclusive Monthly ($297/mo)';
+    } else if (tier === 1) {
+      // They want Tier 1 — show annual vs monthly for Tier 1
+      document.querySelector('.btn-annual-t2').href = t1Annual;
+      document.querySelector('.btn-annual-t2').textContent = 'Yes — Content Annual ($1,490/yr)';
+      document.querySelector('.btn-annual-t1').href = t1Monthly;
+      document.querySelector('.btn-annual-t1').textContent = 'No thanks — Content Monthly ($149/mo)';
+    } else {
+      // Generic — show both annual options
+      document.querySelector('.btn-annual-t2').href = t2Annual;
+      document.querySelector('.btn-annual-t2').textContent = 'All Inclusive Annual — $2,970/yr';
+      document.querySelector('.btn-annual-t1').href = t1Annual;
+      document.querySelector('.btn-annual-t1').textContent = 'Content Only Annual — $1,490/yr';
+    }
+  }
+
+  // Close upsell on overlay click
+  document.getElementById('demo-upsell-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeDemoUpsellModal();
+  });
+</script>
+
 </body>
 </html>
