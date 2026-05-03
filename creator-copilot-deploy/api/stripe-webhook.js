@@ -11,13 +11,13 @@ const HEADERS = { 'Content-Type': 'application/json' };
 // Find them in Stripe Dashboard → Products → click each product → copy the Price ID
 const PRICE_TIER_MAP = {
   // Content Monthly $149
-  'price_1TPxmzGhJomtax1ojXwyJOT0': 'tier1_monthly',
-  // Content Annual $1490
-  'price_1TPxqtGhJomtax1ooArcxCU0': 'tier1_annual',
+  'price_1TSnB9GhJomtax1oIrmxnFH1': 'tier1_monthly',
+  // Content Annual $1,490
+  'price_1TSnGGGhJomtax1o8kH3wKLn': 'tier1_annual',
   // All Inclusive Monthly $297
-  'price_1TPxszGhJomtax1o6hGDsauj': 'tier2_monthly',
-  // All Inclusive Annual $2970
-  'price_1TPxwYGhJomtax1oSdWk7FFQ': 'tier2_annual',
+  'price_1TSnIPGhJomtax1ot7xPd5gx': 'tier2_monthly',
+  // All Inclusive Annual $2,970
+  'price_1TSnL8GhJomtax1oC8MU4d5d': 'tier2_annual',
 };
 
 // Fallback detection by amount if price IDs not mapped
