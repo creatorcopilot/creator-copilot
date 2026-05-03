@@ -1,9 +1,11 @@
 const Stripe = require('stripe');
 const { createClient } = require('@supabase/supabase-js');
+const twilio = require('twilio');
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
 
+const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 const HEADERS = { 'Content-Type': 'application/json' };
 
 // ── MAP YOUR STRIPE PRICE IDs TO TIERS ───────────────────────────
@@ -112,11 +114,47 @@ exports.handler = async function(event, context) {
   // ── SUBSCRIPTION CANCELLED ────────────────────────────────────
   if (stripeEvent.type === 'customer.subscription.deleted') {
     const subscription = stripeEvent.data.object;
+
+    // Get client record before updating
+    const { data: client } = await supabase
+      .from('clients')
+      .select('name, phone, business_name')
+      .eq('stripe_subscription_id', subscription.id)
+      .single()
+      .catch(() => ({ data: null }));
+
+    // Update status to cancelled
     await supabase
       .from('clients')
       .update({ status: 'cancelled' })
       .eq('stripe_subscription_id', subscription.id);
+
     console.log('Subscription cancelled:', subscription.id);
+
+    // Send offboarding text if they have a phone number
+    if (client?.phone) {
+      const firstName = client.name?.split(' ')[0] || 'there';
+      const businessName = client.business_name || client.name || firstName;
+
+      try {
+        await twilioClient.messages.create({
+          body: `Creator Copilot 🎬 [${businessName}]
+
+Your subscription has ended. Your daily scripts and brand deal pitches will stop as of today.
+
+We hope we made an impact.
+
+If you ever want to come back — your audience profile is saved and we'll pick up right where we left off.
+
+creatorcopilot.org`,
+          from: process.env.TWILIO_PHONE_NUMBER,
+          to: client.phone
+        });
+        console.log('Offboarding text sent to:', client.phone);
+      } catch(e) {
+        console.error('Offboarding text failed:', e.message);
+      }
+    }
   }
 
   return { statusCode: 200, headers: HEADERS, body: JSON.stringify({ received: true }) };
