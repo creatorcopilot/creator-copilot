@@ -1727,8 +1727,8 @@ Return ONLY the JSON object. No extra text.`;
         <div class="amp-save">Save $594</div>
       </div>
     </div>
-    <a href="https://buy.stripe.com/4gM28rgC32DZcsG5sx1Jm03" class="btn-annual-t2">Get All Inclusive Annual — $2,970/yr</a>
-    <a href="https://buy.stripe.com/4gM4gzadF5QbboC8EJ1Jm01" class="btn-annual-t1">Content Only Annual — $1,490/yr</a>
+    <a href="https://buy.stripe.com/bJebJ11H90vRakydZ31Jm07" class="btn-annual-t2">Get All Inclusive Annual — $2,970/yr</a>
+    <a href="https://buy.stripe.com/cNi00jfxZ0vR2S62gl1Jm05" class="btn-annual-t1">Content Only Annual — $1,490/yr</a>
     <button class="btn-annual-skip" id="annual-skip-btn" onclick="goMonthly()">No thanks — I'll pay monthly</button>
   </div>
 </div>
@@ -1747,8 +1747,8 @@ Return ONLY the JSON object. No extra text.`;
   function goMonthly() {
     closeAnnualModal();
     // Send them to the monthly link for whichever tier they selected
-    var t2Monthly = 'https://buy.stripe.com/8x2fZh71t4M78cq8EJ1Jm02';
-    var t1Monthly = 'https://buy.stripe.com/14A4gzclNdiD2S6f371Jm00';
+    var t2Monthly = 'https://buy.stripe.com/00w4gzclNbav64i9IN1Jm06';
+    var t1Monthly = 'https://buy.stripe.com/aFadR9adF7Yj0JY9IN1Jm04';
     window.location.href = selectedTier === 2 ? t2Monthly : t1Monthly;
   }
 
@@ -1806,10 +1806,10 @@ Return ONLY the JSON object. No extra text.`;
     document.body.style.overflow = 'hidden';
 
     // Update annual modal buttons based on tier selection
-    var t2Annual = 'https://buy.stripe.com/4gM28rgC32DZcsG5sx1Jm03';
-    var t1Annual = 'https://buy.stripe.com/4gM4gzadF5QbboC8EJ1Jm01';
-    var t2Monthly = 'https://buy.stripe.com/8x2fZh71t4M78cq8EJ1Jm02';
-    var t1Monthly = 'https://buy.stripe.com/14A4gzclNdiD2S6f371Jm00';
+    var t2Annual = 'https://buy.stripe.com/bJebJ11H90vRakydZ31Jm07';
+    var t1Annual = 'https://buy.stripe.com/cNi00jfxZ0vR2S62gl1Jm05';
+    var t2Monthly = 'https://buy.stripe.com/00w4gzclNbav64i9IN1Jm06';
+    var t1Monthly = 'https://buy.stripe.com/aFadR9adF7Yj0JY9IN1Jm04';
 
     if (tier === 2) {
       // They want Tier 2 — show annual vs monthly for Tier 2
