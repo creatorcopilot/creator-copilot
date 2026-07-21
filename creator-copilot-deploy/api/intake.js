@@ -1,11 +1,19 @@
-const Anthropic = require('@anthropic-ai/sdk');
 const { createClient } = require('@supabase/supabase-js');
 const { Resend } = require('resend');
-const twilio = require('twilio');
 const { MASTER_REFERENCE } = require('./master-reference');
-const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+// Vonage SMS
+async function sendSMS(to, text) {
+  const res = await fetch('https://rest.nexmo.com/sms/json', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ api_key: process.env.VONAGE_API_KEY, api_secret: process.env.VONAGE_API_SECRET, from: process.env.VONAGE_PHONE_NUMBER, to, text }).toString()
+  });
+  const data = await res.json();
+  if (data.messages?.[0]?.status !== '0') throw new Error('Vonage: ' + (data.messages?.[0]?.['error-text'] || 'error'));
+  return data;
+}
+
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -105,16 +113,47 @@ CRITICAL — DYNAMIC SCRIPT FORMAT:
 - Every script needs: title, hook, structure, cta, tiktok_note, instagram_note, caption
 - NEVER fabricate personal stories. Use [brackets] to prompt their real one.${isTier2 ? ', inroSetup (triggerWord/message1/message2/message3), brandReport (weeklyMarketRead/topBrands/pitchEmails)' : ''}`;
 
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 8000,
-      system: MASTER_REFERENCE,
-      messages: [{ role: 'user', content: prompt }]
+    // Use Edge Function for generation — no timeout limit
+    const { data: job, error: jobError } = await supabase
+      .from('generation_jobs')
+      .insert({ client_email: clientEmail, type: 'intake', status: 'processing', prompt })
+      .select()
+      .single();
+
+    if (jobError) throw new Error('Failed to create job: ' + jobError.message);
+
+    const edgeUrl = process.env.SUPABASE_URL + '/functions/v1/generation';
+    await fetch(edgeUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + process.env.SUPABASE_SERVICE_KEY,
+        'apikey': process.env.SUPABASE_ANON_KEY
+      },
+      body: JSON.stringify({ jobId: job.id, prompt, type: 'intake' })
     });
 
-    const text = response.content[0].text;
-    const clean = text.replace(/```json|```/g, '').trim();
-    const output = JSON.parse(clean);
+    // Poll for result — up to 3 minutes
+    let output = null;
+    const maxWait = 180000;
+    const start = Date.now();
+    while (Date.now() - start < maxWait) {
+      await new Promise(r => setTimeout(r, 5000));
+      const { data: jobStatus } = await supabase
+        .from('generation_jobs')
+        .select('status, result')
+        .eq('id', job.id)
+        .single();
+      if (jobStatus?.status === 'complete' && jobStatus?.result) {
+        output = jobStatus.result;
+        break;
+      }
+      if (jobStatus?.status === 'error') {
+        throw new Error('Generation failed');
+      }
+    }
+
+    if (!output) throw new Error('Generation timed out');
 
     await supabase.from('clients').update({
       creator_personality: output.creatorPersonality,
@@ -177,11 +216,7 @@ CRITICAL — DYNAMIC SCRIPT FORMAT:
       if (delayMs < 23 * 60 * 60 * 1000) {
         setTimeout(async () => {
           try {
-            await twilioClient.messages.create({
-              body: onboardingText,
-              from: process.env.TWILIO_PHONE_NUMBER,
-              to: phone
-            });
+            await sendSMS(phone, onboardingText);
             console.log('Onboarding text sent to:', phone);
           } catch(e) {
             console.error('Onboarding text failed:', e.message);
@@ -300,43 +335,48 @@ Reply STOP to unsubscribe`;
 }
 
 function buildEmail(output, firstName, isTier2) {
-  const scripts = output.scripts || [];
   return `<!DOCTYPE html><html><head><style>
     body{font-family:Arial,sans-serif;background:#06060F;color:#F4F4EF;margin:0;padding:0}
     .wrap{max-width:600px;margin:0 auto;padding:40px 24px}
     .logo{font-size:20px;font-weight:900;letter-spacing:4px;margin-bottom:32px}
     .logo span{color:#FF2424}
-    h1{font-size:28px;font-weight:900;margin-bottom:16px}
+    h1{font-size:28px;font-weight:900;margin-bottom:16px;line-height:1.1}
     h1 em{color:#FF2424;font-style:normal}
-    p{font-size:15px;line-height:1.8;color:#8888AA;margin-bottom:16px}
+    p{font-size:14px;line-height:1.8;color:#8888AA;margin-bottom:16px}
     p strong{color:#F4F4EF}
-    .card{background:#0E0E1C;border-left:4px solid #FF2424;padding:24px;margin-bottom:16px}
-    .num{font-size:10px;letter-spacing:3px;color:#FF2424;text-transform:uppercase;margin-bottom:8px}
-    .title{font-size:16px;font-weight:700;margin-bottom:12px}
-    .hook{font-size:18px;font-weight:700;color:#FF2424;margin-bottom:12px}
-    .script{font-size:14px;color:#AAAACC;line-height:1.8;white-space:pre-wrap;margin-bottom:12px}
-    .note{font-size:12px;color:#444466;font-style:italic;margin-bottom:4px}
-    .caption{background:#1A1A2E;padding:12px;margin-top:12px;font-size:12px;color:#6666AA}
-    .divider{height:1px;background:rgba(255,255,255,0.06);margin:32px 0}
+    .step{background:#0E0E1C;border-left:4px solid #FF2424;padding:16px 20px;margin-bottom:12px}
+    .step-num{font-family:monospace;font-size:9px;letter-spacing:2px;color:#FF2424;text-transform:uppercase;margin-bottom:4px}
+    .step-text{font-size:14px;color:#F4F4EF;font-weight:600}
+    .step-sub{font-size:12px;color:#6666AA;margin-top:4px;line-height:1.6}
+    .divider{height:1px;background:rgba(255,255,255,0.06);margin:28px 0}
     .footer{font-size:11px;color:#444466;margin-top:40px}
   </style></head><body><div class="wrap">
     <div class="logo">CREATOR<span>COPILOT</span></div>
-    <h1>Week 1 is <em>ready.</em></h1>
-    <p>Hey ${firstName} — your first week of content is built and ready to film. Five scripts below. Film whenever you have ten minutes. Post them. That is your entire job this week.</p>
+    <h1>You're in, ${firstName}.<br>Here's what <em>happens next.</em></h1>
+    <p>Your content system is live. Before anything else — take 3 minutes and do these two things right now.</p>
+
+    <div class="step">
+      <div class="step-num">Do this now</div>
+      <div class="step-text">Check your phone</div>
+      <div class="step-sub">You just received a text with your Instagram setup instructions. Follow them before you post anything. It takes 3 minutes and makes every script work harder.</div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">Starting tomorrow</div>
+      <div class="step-text">Your first script arrives at 9am</div>
+      <div class="step-sub">Every morning at 9am a script lands on your phone. Hook, structure, CTA, filming instructions, and caption — all in one text. Read it once. Film it. Post it. That's the whole job.</div>
+    </div>
+
+    ${isTier2 ? `
+    <div class="step">
+      <div class="step-num">Every Monday morning</div>
+      <div class="step-text">Your brand deal pitches arrive</div>
+      <div class="step-sub">Every Monday you'll get an email with your Top 5 brand opportunities for the week — researched, scored, and ranked. One tap generates a custom pitch email ready to send. One pitch per week. Done right.</div>
+    </div>` : ''}
+
     <div class="divider"></div>
-    ${scripts.map((s,i) => `<div class="card">
-      <div class="num">Script ${i+1}</div>
-      <div class="title">${s.title||''}</div>
-      <div class="hook">"${s.hook||''}"</div>
-      <div class="script">${s.script||''}</div>
-      <div class="note">→ CTA: ${s.cta||''}</div>
-      <div class="note">TikTok: ${s.tiktok_note||''}</div>
-      <div class="note">Instagram: ${s.instagram_note||''}</div>
-      <div class="caption">${s.caption||''}</div>
-    </div>`).join('')}
-    <div class="divider"></div>
-    <p>See you next Monday.</p>
-    <p style="color:#FF2424;font-weight:700;">You create. We make you unstoppable.</p>
-    <div class="footer">Creator Copilot · marketing@creatorcopilot.org</div>
+    <p>That's it. The system runs itself from here.</p>
+    <p style="color:#FF2424;font-weight:700;font-size:15px;">You create. We make you unstoppable.</p>
+    <div class="footer">Creator Copilot · marketing@creatorcopilot.org · creatorcopilot.org<br><br>Reply to this email anytime with questions.</div>
   </div></body></html>`;
 }

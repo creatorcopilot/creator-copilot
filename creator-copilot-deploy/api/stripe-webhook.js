@@ -1,11 +1,21 @@
 const Stripe = require('stripe');
 const { createClient } = require('@supabase/supabase-js');
-const twilio = require('twilio');
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
 
-const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+
+// Vonage SMS
+async function sendSMS(to, text) {
+  const res = await fetch('https://rest.nexmo.com/sms/json', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ api_key: process.env.VONAGE_API_KEY, api_secret: process.env.VONAGE_API_SECRET, from: process.env.VONAGE_PHONE_NUMBER, to, text }).toString()
+  });
+  const data = await res.json();
+  if (data.messages?.[0]?.status !== '0') throw new Error('Vonage: ' + (data.messages?.[0]?.['error-text'] || 'error'));
+  return data;
+}
 const HEADERS = { 'Content-Type': 'application/json' };
 
 // ── MAP YOUR STRIPE PRICE IDs TO TIERS ───────────────────────────
@@ -137,8 +147,7 @@ exports.handler = async function(event, context) {
       const businessName = client.business_name || client.name || firstName;
 
       try {
-        await twilioClient.messages.create({
-          body: `Creator Copilot 🎬 [${businessName}]
+        await sendSMS( `Creator Copilot 🎬 [${businessName}]
 
 Your subscription has ended. Your daily scripts and brand deal pitches will stop as of today.
 
@@ -147,9 +156,7 @@ We hope we made an impact.
 If you ever want to come back — your audience profile is saved and we'll pick up right where we left off.
 
 creatorcopilot.org`,
-          from: process.env.TWILIO_PHONE_NUMBER,
-          to: client.phone
-        });
+client.phone);
         console.log('Offboarding text sent to:', client.phone);
       } catch(e) {
         console.error('Offboarding text failed:', e.message);
