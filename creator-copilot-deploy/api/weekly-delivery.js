@@ -120,44 +120,47 @@ async function pollForResult(jobId, maxMs) {
 }
 
 function buildPrompt(client, isTier2, weekNumber) {
-  return `You are the Creator Copilot AI. Generate Week ${weekNumber} content for this client.
+  const tier2Extra = isTier2 ? [
+    'Also generate:',
+    '- inroSetup: { triggerWord, message1, message2, message3 }',
+    '- brandReport: { weeklyMarketRead, topBrands: [{name, score, tag, pitchAngle}] }'
+  ].join('\n') : '';
 
-CLIENT PROFILE:
-Name: ${client.name}
-Business: ${client.business_name || client.name}
-Niche: ${client.niche || client.category}
-Category: ${client.category}
-Platforms: ${client.platforms || 'TikTok, Instagram'}
-Goal: ${client.goal}
-Targeting: ${client.targeting || 'anywhere'}
-Location: ${client.location || 'Not specified'}
-Style: ${client.content_style || 'conversational'}
-Differentiator: ${client.differentiator || ''}
-Off limits: ${client.off_limits || 'None'}
-Content Fingerprint: ${JSON.stringify(client.content_fingerprint || {})}
-Micro Audience: ${JSON.stringify(client.micro_audience || {})}
+  const tier2Keys = isTier2 ? '\n- inroSetup: { triggerWord, message1, message2, message3 }\n- brandReport: { weeklyMarketRead, topBrands: [{name, score, tag, pitchAngle}] }' : '';
 
-INSTRUCTIONS:
-Run the research engine first — search TikTok and Instagram for what content formats are performing best in the ${client.category} niche RIGHT NOW this week.
-
-Then generate 7 scripts (one per day Monday-Sunday) using dynamic format selection based on your research findings.
-
-Script format rules:
-- Script 1 (Monday): 30-45 seconds personal story format
-- Scripts 2-6: 15-17 seconds (3-10-3 format: hook + one value punch + CTA)
-- Script 7 (Sunday): 10 seconds max, high pattern-interrupt, designed to spread
-- NEVER fabricate personal stories — use [brackets] to prompt their real story
-- Each script title should describe what format it is AND why based on research
-
-${isTier2 ? `Also generate:
-- Inro automation setup (trigger word + 3 DM sequences)
-- Brand intelligence report (Top 5 brands spending in this niche, scored using Blake's framework)
-- Weekly market read (what's spending in this niche right now)` : ''}
-
-Return ONLY valid JSON with these keys:
-- scripts: array of 7 objects, each with: title, hook, structure, cta, tiktok_note, instagram_note, caption
-${isTier2 ? '- inroSetup: { triggerWord, message1, message2, message3 }
-- brandReport: { weeklyMarketRead, topBrands: [{name, score, tag, pitchAngle}] }' : ''}`;
+  return [
+    'You are the Creator Copilot AI. Generate Week ' + weekNumber + ' content for this client.',
+    '',
+    'CLIENT PROFILE:',
+    'Name: ' + client.name,
+    'Business: ' + (client.business_name || client.name),
+    'Niche: ' + (client.niche || client.category),
+    'Category: ' + client.category,
+    'Platforms: ' + (client.platforms || 'TikTok, Instagram'),
+    'Goal: ' + client.goal,
+    'Targeting: ' + (client.targeting || 'anywhere'),
+    'Location: ' + (client.location || 'Not specified'),
+    'Style: ' + (client.content_style || 'conversational'),
+    'Differentiator: ' + (client.differentiator || ''),
+    'Off limits: ' + (client.off_limits || 'None'),
+    '',
+    'INSTRUCTIONS:',
+    'Run the research engine first. Search TikTok and Instagram for what content formats are performing best in the ' + client.category + ' niche RIGHT NOW this week.',
+    '',
+    'Then generate 7 scripts (one per day Monday-Sunday) using dynamic format selection based on your research findings.',
+    '',
+    'Script format rules:',
+    '- Script 1 (Monday): 30-45 seconds personal story format',
+    '- Scripts 2-6: 15-17 seconds (3-10-3 format: hook + one value punch + CTA)',
+    '- Script 7 (Sunday): 10 seconds max, high pattern-interrupt, designed to spread',
+    '- NEVER fabricate personal stories — use [brackets] to prompt their real story',
+    '- Each script title should describe what format it is AND why based on research',
+    '',
+    tier2Extra,
+    '',
+    'Return ONLY valid JSON with these keys:',
+    '- scripts: array of 7 objects, each with: title, hook, structure, cta, tiktok_note, instagram_note, caption' + tier2Keys
+  ].join('\n');
 }
 
 function buildWeeklyEmail(output, firstName, weekNumber, isTier2, clientEmail) {
